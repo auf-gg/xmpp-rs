@@ -1,4 +1,4 @@
-///! Provides a few SASL mechanisms.
+//! Provides a few SASL mechanisms.
 
 mod anonymous;
 mod plain;
