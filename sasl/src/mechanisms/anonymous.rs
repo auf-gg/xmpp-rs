@@ -1,8 +1,8 @@
 //! Provides the SASL "ANONYMOUS" mechanism.
 
-use SaslMechanism;
-use SaslCredentials;
-use SaslSecret;
+use Mechanism;
+use Credentials;
+use Secret;
 
 /// A struct for the SASL ANONYMOUS mechanism.
 pub struct Anonymous;
@@ -10,18 +10,18 @@ pub struct Anonymous;
 impl Anonymous {
     /// Constructs a new struct for authenticating using the SASL ANONYMOUS mechanism.
     ///
-    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// It is recommended that instead you use a `Credentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
     pub fn new() -> Anonymous {
         Anonymous
     }
 }
 
-impl SaslMechanism for Anonymous {
+impl Mechanism for Anonymous {
     fn name(&self) -> &str { "ANONYMOUS" }
 
-    fn from_credentials(credentials: SaslCredentials) -> Result<Anonymous, String> {
-        if let SaslSecret::None = credentials.secret {
+    fn from_credentials(credentials: Credentials) -> Result<Anonymous, String> {
+        if let Secret::None = credentials.secret {
             Ok(Anonymous)
         }
         else {

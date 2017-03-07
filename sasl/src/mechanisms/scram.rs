@@ -2,9 +2,9 @@
 
 use base64;
 
-use SaslMechanism;
-use SaslCredentials;
-use SaslSecret;
+use Mechanism;
+use Credentials;
+use Secret;
 use ChannelBinding;
 
 use error::Error;
@@ -147,7 +147,7 @@ impl<S: ScramProvider> Scram<S> {
     /// Constructs a new struct for authenticating using the SASL SCRAM-* and SCRAM-*-PLUS
     /// mechanisms, depending on the passed channel binding.
     ///
-    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// It is recommended that instead you use a `Credentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
     pub fn new<N: Into<String>, P: Into<String>>(username: N, password: P, channel_binding: ChannelBinding) -> Result<Scram<S>, Error> {
         Ok(Scram {
@@ -177,13 +177,13 @@ impl<S: ScramProvider> Scram<S> {
     }
 }
 
-impl<S: ScramProvider> SaslMechanism for Scram<S> {
+impl<S: ScramProvider> Mechanism for Scram<S> {
     fn name(&self) -> &str { // TODO: this is quite the workaround…
         &self.name
     }
 
-    fn from_credentials(credentials: SaslCredentials) -> Result<Scram<S>, String> {
-        if let SaslSecret::Password(password) = credentials.secret {
+    fn from_credentials(credentials: Credentials) -> Result<Scram<S>, String> {
+        if let Secret::Password(password) = credentials.secret {
             if let Some(username) = credentials.username {
                 Scram::new(username, password, credentials.channel_binding)
                       .map_err(|_| "can't generate nonce".to_owned())
@@ -284,7 +284,7 @@ impl<S: ScramProvider> SaslMechanism for Scram<S> {
 
 #[cfg(test)]
 mod tests {
-    use ::SaslMechanism;
+    use ::Mechanism;
 
     use super::*;
 
