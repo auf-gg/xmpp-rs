@@ -2,129 +2,13 @@
 
 use base64;
 
-use Mechanism;
-use Credentials;
-use Secret;
-use ChannelBinding;
+use client::Mechanism;
+use common::{ChannelBinding, parse_frame, xor, Password, Credentials, Secret, Identity};
+use common::scram::{ScramProvider, generate_nonce};
 
 use error::Error;
 
-use openssl::pkcs5::pbkdf2_hmac;
-use openssl::hash::hash;
-use openssl::hash::MessageDigest;
-use openssl::sign::Signer;
-use openssl::pkey::PKey;
-use openssl::rand::rand_bytes;
-use openssl::error::ErrorStack;
-
 use std::marker::PhantomData;
-
-use std::collections::HashMap;
-
-use std::string::FromUtf8Error;
-
-#[cfg(test)]
-#[test]
-fn xor_works() {
-    assert_eq!( xor( &[135, 94, 53, 134, 73, 233, 140, 221, 150, 12, 96, 111, 54, 66, 11, 76]
-                   , &[163, 9, 122, 180, 107, 44, 22, 252, 248, 134, 112, 82, 84, 122, 56, 209] )
-              , &[36, 87, 79, 50, 34, 197, 154, 33, 110, 138, 16, 61, 98, 56, 51, 157] );
-}
-
-fn xor(a: &[u8], b: &[u8]) -> Vec<u8> {
-    assert_eq!(a.len(), b.len());
-    let mut ret = Vec::with_capacity(a.len());
-    for (a, b) in a.into_iter().zip(b) {
-        ret.push(a ^ b);
-    }
-    ret
-}
-
-fn parse_frame(frame: &[u8]) -> Result<HashMap<String, String>, FromUtf8Error> {
-    let inner = String::from_utf8(frame.to_owned())?;
-    let mut ret = HashMap::new();
-    for s in inner.split(',') {
-        let mut tmp = s.splitn(2, '=');
-        let key = tmp.next();
-        let val = tmp.next();
-        match (key, val) {
-            (Some(k), Some(v)) => {
-                ret.insert(k.to_owned(), v.to_owned());
-            },
-            _ =>(),
-        }
-    }
-    Ok(ret)
-}
-
-fn generate_nonce() -> Result<String, ErrorStack> {
-    let mut data = vec![0; 32];
-    rand_bytes(&mut data)?;
-    Ok(base64::encode(&data))
-}
-
-/// A trait which defines the needed methods for SCRAM.
-pub trait ScramProvider {
-    /// The name of the hash function.
-    fn name() -> &'static str;
-
-    /// A function which hashes the data using the hash function.
-    fn hash(data: &[u8]) -> Vec<u8>;
-
-    /// A function which performs an HMAC using the hash function.
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8>;
-
-    /// A function which does PBKDF2 key derivation using the hash function.
-    fn derive(data: &[u8], salt: &[u8], iterations: usize) -> Vec<u8>;
-}
-
-/// A `ScramProvider` which provides SCRAM-SHA-1 and SCRAM-SHA-1-PLUS
-pub struct Sha1;
-
-impl ScramProvider for Sha1 { // TODO: look at all these unwraps
-    fn name() -> &'static str { "SHA-1" }
-
-    fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha1(), data).unwrap()
-    }
-
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
-        let pkey = PKey::hmac(key).unwrap();
-        let mut signer = Signer::new(MessageDigest::sha1(), &pkey).unwrap();
-        signer.update(data).unwrap();
-        signer.finish().unwrap()
-    }
-
-    fn derive(data: &[u8], salt: &[u8], iterations: usize) -> Vec<u8> {
-        let mut result = vec![0; 20];
-        pbkdf2_hmac(data, salt, iterations, MessageDigest::sha1(), &mut result).unwrap();
-        result
-    }
-}
-
-/// A `ScramProvider` which provides SCRAM-SHA-256 and SCRAM-SHA-256-PLUS
-pub struct Sha256;
-
-impl ScramProvider for Sha256 { // TODO: look at all these unwraps
-    fn name() -> &'static str { "SHA-256" }
-
-    fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha256(), data).unwrap()
-    }
-
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
-        let pkey = PKey::hmac(key).unwrap();
-        let mut signer = Signer::new(MessageDigest::sha256(), &pkey).unwrap();
-        signer.update(data).unwrap();
-        signer.finish().unwrap()
-    }
-
-    fn derive(data: &[u8], salt: &[u8], iterations: usize) -> Vec<u8> {
-        let mut result = vec![0; 32];
-        pbkdf2_hmac(data, salt, iterations, MessageDigest::sha256(), &mut result).unwrap();
-        result
-    }
-}
 
 enum ScramState {
     Init,
@@ -136,7 +20,7 @@ enum ScramState {
 pub struct Scram<S: ScramProvider> {
     name: String,
     username: String,
-    password: String,
+    password: Password,
     client_nonce: String,
     state: ScramState,
     channel_binding: ChannelBinding,
@@ -149,7 +33,7 @@ impl<S: ScramProvider> Scram<S> {
     ///
     /// It is recommended that instead you use a `Credentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
-    pub fn new<N: Into<String>, P: Into<String>>(username: N, password: P, channel_binding: ChannelBinding) -> Result<Scram<S>, Error> {
+    pub fn new<N: Into<String>, P: Into<Password>>(username: N, password: P, channel_binding: ChannelBinding) -> Result<Scram<S>, Error> {
         Ok(Scram {
             name: format!("SCRAM-{}", S::name()),
             username: username.into(),
@@ -164,7 +48,7 @@ impl<S: ScramProvider> Scram<S> {
     // Used for testing.
     #[doc(hidden)]
     #[cfg(test)]
-    pub fn new_with_nonce<N: Into<String>, P: Into<String>>(username: N, password: P, nonce: String) -> Scram<S> {
+    pub fn new_with_nonce<N: Into<String>, P: Into<Password>>(username: N, password: P, nonce: String) -> Scram<S> {
         Scram {
             name: format!("SCRAM-{}", S::name()),
             username: username.into(),
@@ -184,7 +68,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
 
     fn from_credentials(credentials: Credentials) -> Result<Scram<S>, String> {
         if let Secret::Password(password) = credentials.secret {
-            if let Some(username) = credentials.username {
+            if let Identity::Username(username) = credentials.identity {
                 Scram::new(username, password, credentials.channel_binding)
                       .map_err(|_| "can't generate nonce".to_owned())
             }
@@ -233,7 +117,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 client_final_message_bare.extend(base64::encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
-                let salted_password = S::derive(self.password.as_bytes(), &salt, iterations);
+                let salted_password = S::derive(&self.password, &salt, iterations)?;
                 let client_key = S::hmac(b"Client Key", &salted_password);
                 let server_key = S::hmac(b"Server Key", &salted_password);
                 let mut auth_message = Vec::new();
@@ -242,6 +126,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 auth_message.extend(challenge);
                 auth_message.push(b',');
                 auth_message.extend(&client_final_message_bare);
+                println!("_ {}", String::from_utf8_lossy(&auth_message));
                 let stored_key = S::hash(&client_key);
                 let client_signature = S::hmac(&auth_message, &stored_key);
                 let client_proof = xor(&client_key, &client_signature);
@@ -284,9 +169,9 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
 
 #[cfg(test)]
 mod tests {
-    use ::Mechanism;
-
-    use super::*;
+    use client::Mechanism;
+    use client::mechanisms::Scram;
+    use common::scram::{Sha1, Sha256};
 
     #[test]
     fn scram_sha1_works() { // Source: https://wiki.xmpp.org/web/SASLandSCRAM-SHA-1
