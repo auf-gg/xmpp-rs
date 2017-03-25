@@ -8,6 +8,8 @@ use openssl::error::ErrorStack;
 
 use common::Password;
 
+use secret;
+
 use base64;
 
 /// Generate a nonce for SCRAM authentication.
@@ -19,6 +21,9 @@ pub fn generate_nonce() -> Result<String, ErrorStack> {
 
 /// A trait which defines the needed methods for SCRAM.
 pub trait ScramProvider {
+    /// The kind of secret this `ScramProvider` requires.
+    type SecretKind: secret::SecretKind;
+
     /// The name of the hash function.
     fn name() -> &'static str;
 
@@ -36,6 +41,8 @@ pub trait ScramProvider {
 pub struct Sha1;
 
 impl ScramProvider for Sha1 { // TODO: look at all these unwraps
+    type SecretKind = secret::Pbkdf2Sha1;
+
     fn name() -> &'static str { "SHA-1" }
 
     fn hash(data: &[u8]) -> Vec<u8> {
@@ -78,6 +85,8 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
 pub struct Sha256;
 
 impl ScramProvider for Sha256 { // TODO: look at all these unwraps
+    type SecretKind = secret::Pbkdf2Sha256;
+
     fn name() -> &'static str { "SHA-256" }
 
     fn hash(data: &[u8]) -> Vec<u8> {
