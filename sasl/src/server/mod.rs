@@ -1,12 +1,12 @@
 use common::Identity;
-use secret::SecretKind;
+use secret::Secret;
 
 #[macro_export]
 macro_rules! impl_validator_using_provider {
     ( $validator:ty, $secret:ty ) => {
         impl $crate::server::Validator<$secret> for $validator {
             fn validate(&self, identity: &$crate::common::Identity
-                             , value: &<$secret as sasl::secret::SecretKind>::Value) -> Result<(), String> {
+                             , value: &$secret) -> Result<(), String> {
                 if &(self as &$crate::server::Provider<$secret>).provide(identity)? == value {
                     Ok(())
                 }
@@ -18,12 +18,12 @@ macro_rules! impl_validator_using_provider {
     }
 }
 
-pub trait Provider<S: SecretKind>: Validator<S> {
-    fn provide(&self, identity: &Identity) -> Result<S::Value, String>;
+pub trait Provider<S: Secret>: Validator<S> {
+    fn provide(&self, identity: &Identity) -> Result<S, String>;
 }
 
-pub trait Validator<S: SecretKind> {
-    fn validate(&self, identity: &Identity, value: &S::Value) -> Result<(), String>;
+pub trait Validator<S: Secret> {
+    fn validate(&self, identity: &Identity, value: &S) -> Result<(), String>;
 }
 
 pub trait Mechanism {

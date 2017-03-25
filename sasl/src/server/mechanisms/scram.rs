@@ -6,7 +6,7 @@ use server::{Provider, Response, Mechanism};
 use common::{Identity, ChannelBinding, parse_frame, xor};
 use common::scram::{ScramProvider, generate_nonce};
 use secret;
-use secret::Pbkdf2SecretValue;
+use secret::Pbkdf2Secret;
 
 enum ScramState {
     Init,
@@ -21,8 +21,8 @@ enum ScramState {
 
 pub struct Scram<S, P>
     where S: ScramProvider,
-          P: Provider<S::SecretKind>,
-          <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue {
+          P: Provider<S::Secret>,
+          S::Secret: secret::Pbkdf2Secret {
     name: String,
     state: ScramState,
     channel_binding: ChannelBinding,
@@ -32,8 +32,8 @@ pub struct Scram<S, P>
 
 impl<S, P> Scram<S, P>
     where S: ScramProvider,
-          P: Provider<S::SecretKind>,
-          <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue {
+          P: Provider<S::Secret>,
+          S::Secret: secret::Pbkdf2Secret {
     pub fn new(provider: P, channel_binding: ChannelBinding) -> Scram<S, P> {
         Scram {
             name: format!("SCRAM-{}", S::name()),
@@ -47,8 +47,8 @@ impl<S, P> Scram<S, P>
 
 impl<S, P> Mechanism for Scram<S, P>
     where S: ScramProvider,
-          P: Provider<S::SecretKind>,
-          <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue {
+          P: Provider<S::Secret>,
+          S::Secret: secret::Pbkdf2Secret {
     fn name(&self) -> &str {
         &self.name
     }

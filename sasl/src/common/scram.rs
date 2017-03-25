@@ -22,7 +22,7 @@ pub fn generate_nonce() -> Result<String, ErrorStack> {
 /// A trait which defines the needed methods for SCRAM.
 pub trait ScramProvider {
     /// The kind of secret this `ScramProvider` requires.
-    type SecretKind: secret::SecretKind;
+    type Secret: secret::Secret;
 
     /// The name of the hash function.
     fn name() -> &'static str;
@@ -41,7 +41,7 @@ pub trait ScramProvider {
 pub struct Sha1;
 
 impl ScramProvider for Sha1 { // TODO: look at all these unwraps
-    type SecretKind = secret::Pbkdf2Sha1;
+    type Secret = secret::Pbkdf2Sha1;
 
     fn name() -> &'static str { "SHA-1" }
 
@@ -85,7 +85,7 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
 pub struct Sha256;
 
 impl ScramProvider for Sha256 { // TODO: look at all these unwraps
-    type SecretKind = secret::Pbkdf2Sha256;
+    type Secret = secret::Pbkdf2Sha256;
 
     fn name() -> &'static str { "SHA-256" }
 
