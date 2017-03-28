@@ -136,7 +136,6 @@ impl<S, P> Mechanism for Scram<S, P>
                 client_final_message_bare.extend(server_nonce.bytes());
                 let client_key = S::hmac(b"Client Key", &salted_password);
                 let server_key = S::hmac(b"Server Key", &salted_password);
-                let stored_key = S::hash(&client_key);
                 let mut auth_message = Vec::new();
                 auth_message.extend(initial_client_message);
                 auth_message.extend(b",");
