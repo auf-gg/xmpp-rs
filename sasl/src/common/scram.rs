@@ -30,7 +30,7 @@ pub trait ScramProvider {
     fn hash(data: &[u8]) -> Vec<u8>;
 
     /// A function which performs an HMAC using the hash function.
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8>;
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, String>;
 
     /// A function which does PBKDF2 key derivation using the hash function.
     fn derive(data: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String>;
@@ -39,7 +39,7 @@ pub trait ScramProvider {
 /// A `ScramProvider` which provides SCRAM-SHA-1 and SCRAM-SHA-1-PLUS
 pub struct Sha1;
 
-impl ScramProvider for Sha1 { // TODO: look at all these unwraps
+impl ScramProvider for Sha1 {
     type Secret = secret::Pbkdf2Sha1;
 
     fn name() -> &'static str { "SHA-1" }
@@ -51,14 +51,17 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
         vec
     }
 
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, String> {
         type HmacSha1 = Hmac<Sha1_hash>;
-        let mut mac = HmacSha1::new_varkey(key).unwrap();
+        let mut mac = match HmacSha1::new_varkey(key) {
+            Ok(mac) => mac,
+            Err(err) => return Err(format!("{}", err)),
+        };
         mac.input(data);
         let result = mac.result();
         let mut vec = Vec::with_capacity(Sha1_hash::output_size());
         vec.extend_from_slice(result.code().as_slice());
-        vec
+        Ok(vec)
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
@@ -89,7 +92,7 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
 /// A `ScramProvider` which provides SCRAM-SHA-256 and SCRAM-SHA-256-PLUS
 pub struct Sha256;
 
-impl ScramProvider for Sha256 { // TODO: look at all these unwraps
+impl ScramProvider for Sha256 {
     type Secret = secret::Pbkdf2Sha256;
 
     fn name() -> &'static str { "SHA-256" }
@@ -101,14 +104,17 @@ impl ScramProvider for Sha256 { // TODO: look at all these unwraps
         vec
     }
 
-    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, String> {
         type HmacSha256 = Hmac<Sha256_hash>;
-        let mut mac = HmacSha256::new_varkey(key).unwrap();
+        let mut mac = match HmacSha256::new_varkey(key) {
+            Ok(mac) => mac,
+            Err(err) => return Err(format!("{}", err)),
+        };
         mac.input(data);
         let result = mac.result();
         let mut vec = Vec::with_capacity(Sha256_hash::output_size());
         vec.extend_from_slice(result.code().as_slice());
-        vec
+        Ok(vec)
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
