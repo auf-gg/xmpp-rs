@@ -1,11 +1,10 @@
 use openssl::pkcs5::pbkdf2_hmac;
 use openssl::hash::MessageDigest;
-use openssl::sign::Signer;
-use openssl::pkey::PKey;
 use openssl::rand::rand_bytes;
 use openssl::error::ErrorStack;
 use sha1::{Sha1 as Sha1_hash, Digest};
 use sha2::Sha256 as Sha256_hash;
+use hmac::{Hmac, Mac};
 
 use crate::common::Password;
 
@@ -54,10 +53,13 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
-        let pkey = PKey::hmac(key).unwrap();
-        let mut signer = Signer::new(MessageDigest::sha1(), &pkey).unwrap();
-        signer.update(data).unwrap();
-        signer.sign_to_vec().unwrap()
+        type HmacSha1 = Hmac<Sha1_hash>;
+        let mut mac = HmacSha1::new_varkey(key).unwrap();
+        mac.input(data);
+        let result = mac.result();
+        let mut vec = Vec::with_capacity(Sha1_hash::output_size());
+        vec.extend_from_slice(result.code().as_slice());
+        vec
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
@@ -101,10 +103,13 @@ impl ScramProvider for Sha256 { // TODO: look at all these unwraps
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
-        let pkey = PKey::hmac(key).unwrap();
-        let mut signer = Signer::new(MessageDigest::sha256(), &pkey).unwrap();
-        signer.update(data).unwrap();
-        signer.sign_to_vec().unwrap()
+        type HmacSha256 = Hmac<Sha256_hash>;
+        let mut mac = HmacSha256::new_varkey(key).unwrap();
+        mac.input(data);
+        let result = mac.result();
+        let mut vec = Vec::with_capacity(Sha256_hash::output_size());
+        vec.extend_from_slice(result.code().as_slice());
+        vec
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
