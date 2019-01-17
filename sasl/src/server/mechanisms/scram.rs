@@ -2,11 +2,11 @@ use std::marker::PhantomData;
 
 use base64;
 
-use server::{Provider, Response, Mechanism};
-use common::{Identity, ChannelBinding, parse_frame, xor};
-use common::scram::{ScramProvider, generate_nonce};
-use secret;
-use secret::Pbkdf2Secret;
+use crate::server::{Provider, Response, Mechanism};
+use crate::common::{Identity, ChannelBinding, parse_frame, xor};
+use crate::common::scram::{ScramProvider, generate_nonce};
+use crate::secret;
+use crate::secret::Pbkdf2Secret;
 
 enum ScramState {
     Init,
@@ -134,8 +134,8 @@ impl<S, P> Mechanism for Scram<S, P>
                 client_final_message_bare.extend(base64::encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
-                let client_key = S::hmac(b"Client Key", &salted_password);
-                let server_key = S::hmac(b"Server Key", &salted_password);
+                let client_key = S::hmac(b"Client Key", &salted_password)?;
+                let server_key = S::hmac(b"Server Key", &salted_password)?;
                 let mut auth_message = Vec::new();
                 auth_message.extend(initial_client_message);
                 auth_message.extend(b",");
@@ -143,14 +143,14 @@ impl<S, P> Mechanism for Scram<S, P>
                 auth_message.extend(b",");
                 auth_message.extend(client_final_message_bare.clone());
                 let stored_key = S::hash(&client_key);
-                let client_signature = S::hmac(&auth_message, &stored_key);
+                let client_signature = S::hmac(&auth_message, &stored_key)?;
                 let client_proof = xor(&client_key, &client_signature);
                 let sent_proof = frame.get("p").ok_or_else(|| "no proof".to_owned())?;
                 let sent_proof = base64::decode(sent_proof).map_err(|_| "can't decode proof".to_owned())?;
                 if client_proof != sent_proof {
                     return Err("authentication failed".to_owned());
                 }
-                let server_signature = S::hmac(&auth_message, &server_key);
+                let server_signature = S::hmac(&auth_message, &server_key)?;
                 let mut buf = Vec::new();
                 buf.extend(b"v=");
                 buf.extend(base64::encode(&server_signature).bytes());
