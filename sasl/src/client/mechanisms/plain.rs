@@ -1,7 +1,7 @@
 //! Provides the SASL "PLAIN" mechanism.
 
-use client::Mechanism;
-use common::{Secret, Credentials, Password, Identity};
+use crate::client::Mechanism;
+use crate::common::{Secret, Credentials, Password, Identity};
 
 /// A struct for the SASL PLAIN mechanism.
 pub struct Plain {

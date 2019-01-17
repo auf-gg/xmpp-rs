@@ -6,9 +6,9 @@ use openssl::pkey::PKey;
 use openssl::rand::rand_bytes;
 use openssl::error::ErrorStack;
 
-use common::Password;
+use crate::common::Password;
 
-use secret;
+use crate::secret;
 
 use base64;
 

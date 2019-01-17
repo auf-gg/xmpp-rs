@@ -2,11 +2,11 @@ use std::marker::PhantomData;
 
 use base64;
 
-use server::{Provider, Response, Mechanism};
-use common::{Identity, ChannelBinding, parse_frame, xor};
-use common::scram::{ScramProvider, generate_nonce};
-use secret;
-use secret::Pbkdf2Secret;
+use crate::server::{Provider, Response, Mechanism};
+use crate::common::{Identity, ChannelBinding, parse_frame, xor};
+use crate::common::scram::{ScramProvider, generate_nonce};
+use crate::secret;
+use crate::secret::Pbkdf2Secret;
 
 enum ScramState {
     Init,
