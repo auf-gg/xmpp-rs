@@ -1,9 +1,8 @@
-use openssl::pkcs5::pbkdf2_hmac;
-use openssl::hash::MessageDigest;
 use rand_os::{OsRng, rand_core::{RngCore, Error as RngError}};
 use sha1::{Sha1 as Sha1_hash, Digest};
 use sha2::Sha256 as Sha256_hash;
 use hmac::{Hmac, Mac};
+use pbkdf2::pbkdf2;
 
 use crate::common::Password;
 
@@ -66,7 +65,7 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 20];
-                pbkdf2_hmac(plain.as_bytes(), salt, iterations, MessageDigest::sha1(), &mut result).unwrap();
+                pbkdf2::<Hmac<Sha1_hash>>(plain.as_bytes(), salt, iterations, &mut result);
                 Ok(result)
             },
             Password::Pbkdf2 { ref method, salt: ref my_salt, iterations: my_iterations, ref data } => {
@@ -116,7 +115,7 @@ impl ScramProvider for Sha256 { // TODO: look at all these unwraps
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 32];
-                pbkdf2_hmac(plain.as_bytes(), salt, iterations, MessageDigest::sha256(), &mut result).unwrap();
+                pbkdf2::<Hmac<Sha256_hash>>(plain.as_bytes(), salt, iterations, &mut result);
                 Ok(result)
             },
             Password::Pbkdf2 { ref method, salt: ref my_salt, iterations: my_iterations, ref data } => {
