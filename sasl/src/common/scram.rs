@@ -1,10 +1,11 @@
 use openssl::pkcs5::pbkdf2_hmac;
-use openssl::hash::hash;
 use openssl::hash::MessageDigest;
 use openssl::sign::Signer;
 use openssl::pkey::PKey;
 use openssl::rand::rand_bytes;
 use openssl::error::ErrorStack;
+use sha1::{Sha1 as Sha1_hash, Digest};
+use sha2::Sha256 as Sha256_hash;
 
 use crate::common::Password;
 
@@ -46,7 +47,10 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
     fn name() -> &'static str { "SHA-1" }
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha1(), data).unwrap().to_vec()
+        let hash = Sha1_hash::digest(data);
+        let mut vec = Vec::with_capacity(Sha1_hash::output_size());
+        vec.extend_from_slice(hash.as_slice());
+        vec
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
@@ -90,7 +94,10 @@ impl ScramProvider for Sha256 { // TODO: look at all these unwraps
     fn name() -> &'static str { "SHA-256" }
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha256(), data).unwrap().to_vec()
+        let hash = Sha256_hash::digest(data);
+        let mut vec = Vec::with_capacity(Sha256_hash::output_size());
+        vec.extend_from_slice(hash.as_slice());
+        vec
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
