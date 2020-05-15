@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use base64;
 
-use crate::server::{Provider, Response, Mechanism};
+use crate::server::{Provider, Response, Mechanism, MechanismError};
 use crate::common::{Identity, ChannelBinding, parse_frame, xor};
 use crate::common::scram::{ScramProvider, generate_nonce};
 use crate::secret;
@@ -53,7 +53,7 @@ impl<S, P> Mechanism for Scram<S, P>
         &self.name
     }
 
-    fn respond(&mut self, payload: &[u8]) -> Result<Response, String> {
+    fn respond(&mut self, payload: &[u8]) -> Result<Response, MechanismError> {
         let next_state;
         let ret;
         match self.state {
@@ -74,7 +74,7 @@ impl<S, P> Mechanism for Scram<S, P>
                     }
                 }
                 if commas < 2 {
-                    return Err("failed to decode message".to_owned());
+                    return Err(MechanismError::FailedToDecodeMessage);
                 }
                 let gs2_header = payload[..idx].to_vec();
                 let rest = payload[idx..].to_vec();
@@ -82,25 +82,25 @@ impl<S, P> Mechanism for Scram<S, P>
                 match self.channel_binding {
                     ChannelBinding::None | ChannelBinding::Unsupported => { // Not supported.
                         if gs2_header[0] != 0x79 { // ord("y")
-                            return Err("channel binding not supported".to_owned());
+                            return Err(MechanismError::ChannelBindingNotSupported);
                         }
                     },
                     ref other => { // Supported.
                         if gs2_header[0] == 0x79 { // ord("y")
-                            return Err("channel binding is supported".to_owned());
+                            return Err(MechanismError::ChannelBindingIsSupported);
                         }
                         else if !other.supports("tls-unique") { // TODO: grab the data
-                            return Err("channel binding mechanism incorrect".to_owned());
+                            return Err(MechanismError::ChannelBindingMechanismIncorrect);
                         }
                     },
                 }
-                let frame = parse_frame(&rest).map_err(|_| "can't decode initial message".to_owned())?;
-                let username = frame.get("n").ok_or_else(|| "no username".to_owned())?;
+                let frame = parse_frame(&rest).map_err(|_| MechanismError::CannotDecodeInitialMessage)?;
+                let username = frame.get("n").ok_or_else(|| MechanismError::NoUsername)?;
                 let identity = Identity::Username(username.to_owned());
-                let client_nonce = frame.get("r").ok_or_else(|| "no nonce".to_owned())?;
+                let client_nonce = frame.get("r").ok_or_else(|| MechanismError::NoNonce)?;
                 let mut server_nonce = String::new();
                 server_nonce += client_nonce;
-                server_nonce += &generate_nonce().map_err(|_| "failed to generate nonce".to_owned())?;
+                server_nonce += &generate_nonce().map_err(|_| MechanismError::FailedToGenerateNonce)?;
                 let pbkdf2 = self.provider.provide(&identity)?;
                 let mut buf = Vec::new();
                 buf.extend(b"r=");
@@ -125,7 +125,7 @@ impl<S, P> Mechanism for Scram<S, P>
                                       , ref gs2_header
                                       , ref initial_client_message
                                       , ref initial_server_message } => {
-                let frame = parse_frame(payload).map_err(|_| "can't decode response".to_owned())?;
+                let frame = parse_frame(payload).map_err(|_| MechanismError::CannotDecodeResponse)?;
                 let mut cb_data: Vec<u8> = Vec::new();
                 cb_data.extend(gs2_header);
                 cb_data.extend(self.channel_binding.data());
@@ -145,10 +145,10 @@ impl<S, P> Mechanism for Scram<S, P>
                 let stored_key = S::hash(&client_key);
                 let client_signature = S::hmac(&auth_message, &stored_key)?;
                 let client_proof = xor(&client_key, &client_signature);
-                let sent_proof = frame.get("p").ok_or_else(|| "no proof".to_owned())?;
-                let sent_proof = base64::decode(sent_proof).map_err(|_| "can't decode proof".to_owned())?;
+                let sent_proof = frame.get("p").ok_or_else(|| MechanismError::NoProof)?;
+                let sent_proof = base64::decode(sent_proof).map_err(|_| MechanismError::CannotDecodeProof)?;
                 if client_proof != sent_proof {
-                    return Err("authentication failed".to_owned());
+                    return Err(MechanismError::AuthenticationFailed);
                 }
                 let server_signature = S::hmac(&auth_message, &server_key)?;
                 let mut buf = Vec::new();
@@ -158,7 +158,7 @@ impl<S, P> Mechanism for Scram<S, P>
                 next_state = ScramState::Done;
             },
             ScramState::Done => {
-                return Err("sasl session is already over".to_owned());
+                return Err(MechanismError::SaslSessionAlreadyOver);
             },
         }
         self.state = next_state;
