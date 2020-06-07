@@ -1,4 +1,4 @@
-use crate::server::{Validator, Response, Mechanism};
+use crate::server::{Validator, Response, Mechanism, MechanismError};
 use crate::common::Identity;
 use crate::secret;
 
@@ -17,13 +17,13 @@ impl<V: Validator<secret::Plain>> Mechanism for Plain<V> {
         "PLAIN"
     }
 
-    fn respond(&mut self, payload: &[u8]) -> Result<Response, String> {
+    fn respond(&mut self, payload: &[u8]) -> Result<Response, MechanismError> {
         let mut sp = payload.split(|&b| b == 0);
         sp.next();
-        let username = sp.next().ok_or_else(|| "no username specified".to_owned())?;
-        let username = String::from_utf8(username.to_vec()).map_err(|_| "error decoding username")?;
-        let password = sp.next().ok_or_else(|| "no password specified".to_owned())?;
-        let password = String::from_utf8(password.to_vec()).map_err(|_| "error decoding password")?;
+        let username = sp.next().ok_or_else(|| MechanismError::NoUsernameSpecified)?;
+        let username = String::from_utf8(username.to_vec()).map_err(|_| MechanismError::ErrorDecodingUsername)?;
+        let password = sp.next().ok_or_else(|| MechanismError::NoPasswordSpecified)?;
+        let password = String::from_utf8(password.to_vec()).map_err(|_| MechanismError::ErrorDecodingPassword)?;
         let ident = Identity::Username(username);
         self.validator.validate(&ident, &secret::Plain(password))?;
         Ok(Response::Success(ident, Vec::new()))
