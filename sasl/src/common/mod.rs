@@ -80,7 +80,7 @@ impl Secret {
         Secret::Password(Password::Plain(password.into()))
     }
 
-    pub fn password_pbkdf2<S: Into<String>>(method: S, salt: Vec<u8>, iterations: usize, data: Vec<u8>) -> Secret {
+    pub fn password_pbkdf2<S: Into<String>>(method: S, salt: Vec<u8>, iterations: u32, data: Vec<u8>) -> Secret {
         Secret::Password(Password::Pbkdf2 {
             method: method.into(),
             salt: salt,
@@ -99,7 +99,7 @@ pub enum Password {
     Pbkdf2 {
         method: String,
         salt: Vec<u8>,
-        iterations: usize,
+        iterations: u32,
         data: Vec<u8>,
     },
 }
