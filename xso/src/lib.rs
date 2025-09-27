@@ -545,42 +545,13 @@ pub fn try_from_element<T: FromXml>(
     unreachable!("minidom::Element did not produce enough events to complete element")
 }
 
-/// # Parse a value from a byte slice containing XML data
-///
-/// This function parses the XML found in `buf`, assuming it contains a
-/// complete XML document (with optional XML declaration) and builds a `T`
-/// from it (without buffering the tree in memory).
-///
-/// If conversion fails, a [`Error`][`crate::error::Error`] is returned. In
-/// particular, if `T` expects a different element header than the element
-/// header at the root of the document in `bytes`,
-/// [`Error::TypeMismatch`][`crate::error::Error::TypeMismatch`] is returned.
-///
-/// ## Example
-///
-#[cfg_attr(
-    not(feature = "macros"),
-    doc = "Because the macros feature was not enabled at doc build time, the example cannot be tested.\n\n```ignore\n"
-)]
-#[cfg_attr(feature = "macros", doc = "\n```\n")]
-/// # use xso::{AsXml, FromXml, from_bytes};
-/// #[derive(FromXml, PartialEq, Debug)]
-/// #[xml(namespace = "urn:example", name = "foo")]
-/// struct Foo {
-///     #[xml(attribute)]
-///     a: String,
-/// }
-///
-/// assert_eq!(
-///     Foo { a: "some-value".to_owned() },
-///     from_bytes(b"<foo xmlns='urn:example' a='some-value'/>").unwrap(),
-/// );
-/// ```
-pub fn from_bytes<T: FromXml>(mut buf: &[u8]) -> Result<T, self::error::Error> {
+fn from_bytes_inner<T: FromXml>(
+    mut parser: rxml::Parser,
+    mut buf: &[u8],
+) -> Result<T, self::error::Error> {
     use rxml::{error::EndOrError, Parse};
 
     let mut languages = rxml::xml_lang::XmlLangStack::new();
-    let mut parser = rxml::Parser::new();
     let (name, attrs) = loop {
         match parser.parse(&mut buf, true) {
             Ok(Some(rxml::Event::XmlDeclaration(_, rxml::XmlVersion::V1_0))) => (),
@@ -631,6 +602,82 @@ pub fn from_bytes<T: FromXml>(mut buf: &[u8]) -> Result<T, self::error::Error> {
     }
 }
 
+/// # Parse a value from a byte slice containing XML data
+///
+/// This function parses the XML found in `buf`, assuming it contains a
+/// complete XML document (with optional XML declaration) and builds a `T`
+/// from it (without buffering the tree in memory).
+///
+/// If conversion fails, a [`Error`][`crate::error::Error`] is returned. In
+/// particular, if `T` expects a different element header than the element
+/// header at the root of the document in `bytes`,
+/// [`Error::TypeMismatch`][`crate::error::Error::TypeMismatch`] is returned.
+///
+/// ## Example
+///
+#[cfg_attr(
+    not(feature = "macros"),
+    doc = "Because the macros feature was not enabled at doc build time, the example cannot be tested.\n\n```ignore\n"
+)]
+#[cfg_attr(feature = "macros", doc = "\n```\n")]
+/// # use xso::{AsXml, FromXml, from_bytes};
+/// #[derive(FromXml, PartialEq, Debug)]
+/// #[xml(namespace = "urn:example", name = "foo")]
+/// struct Foo {
+///     #[xml(attribute)]
+///     a: String,
+/// }
+///
+/// assert_eq!(
+///     Foo { a: "some-value".to_owned() },
+///     from_bytes(b"<foo xmlns='urn:example' a='some-value'/>").unwrap(),
+/// );
+/// ```
+pub fn from_bytes<T: FromXml>(buf: &[u8]) -> Result<T, self::error::Error> {
+    let parser = rxml::Parser::new();
+    from_bytes_inner(parser, buf)
+}
+
+/// # Parse a value from a byte slice with specific parser options.
+///
+/// This is the same as [`from_bytes`], except that the rxml parser
+/// [`Options`][`rxml::Options`] can be specified explicitly.
+///
+/// ## Example
+///
+#[cfg_attr(
+    not(feature = "macros"),
+    doc = "Because the macros feature was not enabled at doc build time, the example cannot be tested.\n\n```ignore\n"
+)]
+#[cfg_attr(feature = "macros", doc = "\n```\n")]
+/// # use xso::{AsXml, FromXml, from_bytes_with_options};
+/// #[derive(FromXml, PartialEq, Debug)]
+/// #[xml(namespace = "urn:example", name = "foo")]
+/// struct Foo {
+///     #[xml(attribute)]
+///     a: String,
+/// }
+///
+/// let mut opts = rxml::Options::default();
+/// opts.comments = rxml::parser::CommentMode::Discard;
+///
+/// assert_eq!(
+///     Foo { a: "some-value".to_owned() },
+///     from_bytes_with_options(
+///         b"<foo xmlns='urn:example' a='some-value'><!-- comment --></foo>",
+///         opts,
+///     ).unwrap(),
+/// );
+/// ```
+pub fn from_bytes_with_options<T: FromXml>(
+    buf: &[u8],
+    opts: rxml::Options,
+) -> Result<T, self::error::Error> {
+    use rxml::WithOptions;
+    let parser = rxml::Parser::with_options(opts);
+    from_bytes_inner(parser, buf)
+}
+
 #[cfg(feature = "std")]
 fn read_start_event_io(
     r: &mut impl Iterator<Item = io::Result<rxml::Event>>,
@@ -652,6 +699,38 @@ fn read_start_event_io(
         self::error::Error::XmlError(rxml::Error::InvalidEof(Some(
             rxml::error::ErrorContext::DocumentBegin,
         ))),
+    ))
+}
+
+fn from_reader_inner<T: FromXml, R: io::BufRead>(
+    mut reader: rxml::XmlLangTracker<rxml::Reader<R>>,
+) -> io::Result<T> {
+    let (name, attrs) = read_start_event_io(&mut reader)?;
+    let mut builder = match T::from_events(
+        name,
+        attrs,
+        &Context::empty().with_language(reader.language()),
+    ) {
+        Ok(v) => v,
+        Err(self::error::FromEventsError::Mismatch { .. }) => {
+            return Err(self::error::Error::TypeMismatch)
+                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+        }
+        Err(self::error::FromEventsError::Invalid(e)) => {
+            return Err(e).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+        }
+    };
+    while let Some(ev) = reader.next() {
+        if let Some(v) = builder
+            .feed(ev?, &Context::empty().with_language(reader.language()))
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?
+        {
+            return Ok(v);
+        }
+    }
+    Err(io::Error::new(
+        io::ErrorKind::UnexpectedEof,
+        self::error::Error::XmlError(rxml::Error::InvalidEof(None)),
     ))
 }
 
@@ -691,34 +770,47 @@ fn read_start_event_io(
 /// ```
 #[cfg(feature = "std")]
 pub fn from_reader<T: FromXml, R: io::BufRead>(r: R) -> io::Result<T> {
-    let mut reader = rxml::XmlLangTracker::wrap(rxml::Reader::new(r));
-    let (name, attrs) = read_start_event_io(&mut reader)?;
-    let mut builder = match T::from_events(
-        name,
-        attrs,
-        &Context::empty().with_language(reader.language()),
-    ) {
-        Ok(v) => v,
-        Err(self::error::FromEventsError::Mismatch { .. }) => {
-            return Err(self::error::Error::TypeMismatch)
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
-        }
-        Err(self::error::FromEventsError::Invalid(e)) => {
-            return Err(e).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
-        }
-    };
-    while let Some(ev) = reader.next() {
-        if let Some(v) = builder
-            .feed(ev?, &Context::empty().with_language(reader.language()))
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?
-        {
-            return Ok(v);
-        }
-    }
-    Err(io::Error::new(
-        io::ErrorKind::UnexpectedEof,
-        self::error::Error::XmlError(rxml::Error::InvalidEof(None)),
-    ))
+    from_reader_inner(rxml::XmlLangTracker::wrap(rxml::Reader::new(r)))
+}
+
+/// # Parse a value using a specific parser config
+///
+/// This is the same as [`from_reader`], except that the rxml parser
+/// [`Options`][`rxml::Options`] can be specified explicitly.
+///
+/// ## Example
+///
+#[cfg_attr(
+    not(feature = "macros"),
+    doc = "Because the macros feature was not enabled at doc build time, the example cannot be tested.\n\n```ignore\n"
+)]
+#[cfg_attr(feature = "macros", doc = "\n```\n")]
+/// # use xso::{AsXml, FromXml, from_reader_with_options};
+/// # use std::io::BufReader;
+/// #[derive(FromXml, PartialEq, Debug)]
+/// #[xml(namespace = "urn:example", name = "foo")]
+/// struct Foo {
+///     #[xml(attribute)]
+///     a: String,
+/// }
+///
+/// let mut opts = rxml::Options::default();
+/// opts.comments = rxml::parser::CommentMode::Discard;
+/// // let file = .. // containing XML comments
+/// # let file = &mut &b"<foo xmlns='urn:example' a='some-value'><!-- comment --></foo>"[..];
+/// assert_eq!(
+///     Foo { a: "some-value".to_owned() },
+///     from_reader_with_options(BufReader::new(file), opts).unwrap(),
+/// );
+/// ```
+#[cfg(feature = "std")]
+pub fn from_reader_with_options<T: FromXml, R: io::BufRead>(
+    r: R,
+    options: rxml::Options,
+) -> io::Result<T> {
+    from_reader_inner(rxml::XmlLangTracker::wrap(rxml::Reader::with_options(
+        r, options,
+    )))
 }
 
 /// # Serialize a value to UTF-8-encoded XML
