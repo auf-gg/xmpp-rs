@@ -6,7 +6,7 @@
 
 //! Utilities which may eventually move upstream to the `rxml` crate.
 
-use alloc::borrow::{Cow, ToOwned};
+use alloc::borrow::Cow;
 
 use rxml::{parser::EventMetrics, AttrMap, Event, Namespace, NcName, NcNameStr, XmlVersion};
 
@@ -27,7 +27,7 @@ pub enum Item<'x> {
     /// Start of an element header
     ElementHeadStart(
         /// Namespace name
-        Namespace,
+        Namespace<'x>,
         /// Local name of the attribute
         Cow<'x, NcNameStr>,
     ),
@@ -35,7 +35,7 @@ pub enum Item<'x> {
     /// An attribute key/value pair
     Attribute(
         /// Namespace name
-        Namespace,
+        Namespace<'x>,
         /// Local name of the attribute
         Cow<'x, NcNameStr>,
         /// Value of the attribute
@@ -67,10 +67,10 @@ impl Item<'_> {
         match self {
             Self::XmlDeclaration(v) => Item::XmlDeclaration(v),
             Self::ElementHeadStart(ns, name) => {
-                Item::ElementHeadStart(ns, Cow::Owned(name.into_owned()))
+                Item::ElementHeadStart(ns.into_static(), Cow::Owned(name.into_owned()))
             }
             Self::Attribute(ns, name, value) => Item::Attribute(
-                ns,
+                ns.into_static(),
                 Cow::Owned(name.into_owned()),
                 Cow::Owned(value.into_owned()),
             ),
@@ -84,8 +84,12 @@ impl Item<'_> {
     pub fn as_rxml_item(&self) -> rxml::Item<'_> {
         match self {
             Self::XmlDeclaration(ref v) => rxml::Item::XmlDeclaration(*v),
-            Self::ElementHeadStart(ref ns, ref name) => rxml::Item::ElementHeadStart(ns, name),
-            Self::Attribute(ref ns, ref name, ref value) => rxml::Item::Attribute(ns, name, value),
+            Self::ElementHeadStart(ref ns, ref name) => {
+                rxml::Item::ElementHeadStart(ns.clone(), name)
+            }
+            Self::Attribute(ref ns, ref name, ref value) => {
+                rxml::Item::Attribute(ns.clone(), name, value)
+            }
             Self::ElementHeadEnd => rxml::Item::ElementHeadEnd,
             Self::Text(ref value) => rxml::Item::Text(value),
             Self::ElementFoot => rxml::Item::ElementFoot,
@@ -172,7 +176,7 @@ impl<I: Iterator<Item = Result<Event, crate::error::Error>>> Iterator for EventT
 pub(crate) struct ItemToEvent<I> {
     inner: I,
     event_buffer: Option<Event>,
-    elem_buffer: Option<(Namespace, NcName, AttrMap)>,
+    elem_buffer: Option<(Namespace<'static>, NcName, AttrMap)>,
 }
 
 impl<'x, I: Iterator<Item = Result<Item<'x>, crate::error::Error>>> ItemToEvent<I> {
@@ -201,7 +205,7 @@ impl<I> ItemToEvent<I> {
                     // runtime error.
                     panic!("got a second ElementHeadStart items without ElementHeadEnd inbetween: ns={:?} name={:?} (state={:?})", ns, name, self.elem_buffer);
                 }
-                self.elem_buffer = Some((ns.to_owned(), name.into_owned(), AttrMap::new()));
+                self.elem_buffer = Some((ns.into_static(), name.into_owned(), AttrMap::new()));
                 Ok(None)
             }
             Item::Attribute(ns, name, value) => {
@@ -214,7 +218,7 @@ impl<I> ItemToEvent<I> {
                         ns, name
                     );
                 };
-                attrs.insert(ns, name.into_owned(), value.into_owned());
+                attrs.insert(ns.into_static(), name.into_owned(), value.into_owned());
                 Ok(None)
             }
             Item::ElementHeadEnd => {
@@ -287,7 +291,7 @@ impl<'x, I: Iterator<Item = Result<Item<'x>, crate::error::Error>>> Iterator for
 mod tests_minidom {
     use super::*;
 
-    use alloc::{string::ToString, vec, vec::Vec};
+    use alloc::{borrow::ToOwned, string::ToString, vec, vec::Vec};
 
     fn events_to_items<I: Iterator<Item = Event>>(events: I) -> Vec<Item<'static>> {
         let iter = EventToItem {

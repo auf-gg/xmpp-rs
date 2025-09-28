@@ -399,8 +399,8 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(IqHeader, 88);
-        assert_size!(IqPayload, 216);
-        assert_size!(Iq, 424);
+        assert_size!(IqPayload, 208);
+        assert_size!(Iq, 408);
     }
 
     #[test]

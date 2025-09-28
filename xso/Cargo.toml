@@ -11,7 +11,7 @@ license = "MPL-2.0"
 
 [dependencies]
 bytes = { version = "1" }
-rxml = { version = "0.13.1", default-features = false }
+rxml = { version = "0.14.0", default-features = false }
 minidom = { version = "0.18", path = "../minidom" }
 xso_proc = { version = "0.2", path = "../xso-proc", optional = true }
 

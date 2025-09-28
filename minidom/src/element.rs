@@ -119,7 +119,7 @@ pub fn escape(raw: &[u8]) -> Cow<'_, [u8]> {
 /// A struct representing a DOM Element.
 pub struct Element {
     name: String,
-    namespace: String,
+    namespace: RxmlNamespace<'static>,
     /// Namespace declarations
     pub prefixes: Prefixes,
     attributes: AttrMap,
@@ -168,7 +168,7 @@ impl Element {
     ) -> Element {
         Element {
             name,
-            namespace,
+            namespace: namespace.into(),
             prefixes: prefixes.into(),
             attributes,
             children,
@@ -240,7 +240,7 @@ impl Element {
     /// Returns a reference to the namespace of this element.
     #[must_use]
     pub fn ns(&self) -> String {
-        self.namespace.clone()
+        self.namespace.clone().into()
     }
 
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
@@ -259,11 +259,11 @@ impl Element {
     #[must_use]
     pub fn attr_ns<'a, NS: Ord + Hash + Eq + ?Sized, N: Ord + Hash + Eq + ?Sized>(
         &'a self,
-        ns: &'a NS,
-        name: &'a N,
+        ns: &NS,
+        name: &N,
     ) -> Option<&'a str>
     where
-        RxmlNamespace: Borrow<NS>,
+        RxmlNamespace<'static>: Borrow<NS>,
         NcName: Borrow<N>,
     {
         if let Some(value) = self.attributes.get(ns, name) {
@@ -300,7 +300,12 @@ impl Element {
     }
 
     /// Modifies the value of an attribute.
-    pub fn set_attr<V: IntoAttributeValue>(&mut self, ns: RxmlNamespace, name: NcName, val: V) {
+    pub fn set_attr<V: IntoAttributeValue>(
+        &mut self,
+        ns: RxmlNamespace<'static>,
+        name: NcName,
+        val: V,
+    ) {
         let val = val.into_attribute_value();
 
         if let Some(value) = self.attributes.get_mut(&ns, &name) {
@@ -421,11 +426,13 @@ impl Element {
             ));
         }
 
-        let namespace: RxmlNamespace = self.namespace.clone().into();
-        writer.write(Item::ElementHeadStart(&namespace, (*self.name).try_into()?))?;
+        writer.write(Item::ElementHeadStart(
+            self.namespace.clone(),
+            (*self.name).try_into()?,
+        ))?;
 
         for ((ns, key), value) in &self.attributes {
-            writer.write(Item::Attribute(ns, key, value))?;
+            writer.write(Item::Attribute(ns.clone(), key, value))?;
         }
 
         if !self.children.is_empty() {
@@ -908,7 +915,7 @@ impl ElementBuilder {
     #[must_use]
     pub fn attr_ns<V: IntoAttributeValue>(
         mut self,
-        ns: RxmlNamespace,
+        ns: RxmlNamespace<'static>,
         name: NcName,
         value: V,
     ) -> ElementBuilder {

@@ -32,7 +32,17 @@ pub(crate) fn namespace_ty(span: Span) -> Type {
                 },
                 PathSegment {
                     ident: Ident::new("Namespace", span),
-                    arguments: PathArguments::None,
+                    arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                        colon2_token: None,
+                        lt_token: token::Lt { spans: [span] },
+                        args: [GenericArgument::Lifetime(Lifetime {
+                            apostrophe: Span::call_site(),
+                            ident: Ident::new("static", Span::call_site()),
+                        })]
+                        .into_iter()
+                        .collect(),
+                        gt_token: token::Gt { spans: [span] },
+                    }),
                 },
             ]
             .into_iter()
