@@ -18,6 +18,7 @@ Version NEXT:
         always sending h='0' in our `<a/>`.
     * Changed:
       - Update hickory-dns to 0.26 (!671)
+      - Drive the XMPP client stream in the background (!631)
 
 Version 5.0.0:
 2025-10-28 pep <pep@bouah.net>

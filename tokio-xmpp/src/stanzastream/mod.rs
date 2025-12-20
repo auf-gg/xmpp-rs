@@ -30,9 +30,9 @@ use core::time::Duration;
 // meant for that stream, replacing it is racy.
 
 use futures::{SinkExt, Stream};
-
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::sync::{mpsc, oneshot};
-
 use xmpp_parsers::{jid::Jid, stream_features::StreamFeatures};
 
 use crate::connect::ServerConnector;
@@ -258,6 +258,34 @@ impl StanzaStream {
         self.assert_send(queue_entry).await;
         token
     }
+
+    /// Split the stream into the [`StanzaSender`] and [`StanzaReceiver`].
+    pub fn split(self) -> (StanzaSender, StanzaReceiver) {
+        let stream = Arc::new(Mutex::new(self));
+
+        let tx = StanzaSender(stream.clone());
+        let rx = StanzaReceiver(stream);
+
+        (tx, rx)
+    }
+
+    /// Reunite the [`StanzaSender`] and [`StanzaReceiver`] back into a single stream.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the `Sender` and `Receiver` don't come from
+    /// the same [`Stream`].
+    pub fn reunite(tx: StanzaSender, rx: StanzaReceiver) -> Self {
+        assert!(
+            Arc::ptr_eq(&tx.0, &rx.0),
+            "Unrelated Sender and Receiver passed to reunite."
+        );
+
+        drop(tx);
+
+        let inner = Arc::try_unwrap(rx.0).expect("Failed to unwrap Receiver Arc");
+        inner.into_inner()
+    }
 }
 
 impl Stream for StanzaStream {
@@ -265,5 +293,34 @@ impl Stream for StanzaStream {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         self.rx.poll_recv(cx)
+    }
+}
+
+/// Send half of the [`StanzaStream`]
+#[derive(Debug)]
+pub struct StanzaSender(pub(super) Arc<Mutex<StanzaStream>>);
+
+impl StanzaSender {
+    /// Send a stanza via the stream.
+    ///
+    /// See the documentation of [`StanzaStream::send()`].
+    pub async fn send(&self, stanza: Box<Stanza>) -> StanzaToken {
+        self.0.lock().await.send(stanza).await
+    }
+}
+
+/// Receive half of the [`StanzaStream`]
+#[derive(Debug)]
+pub struct StanzaReceiver(pub(super) Arc<Mutex<StanzaStream>>);
+
+impl Stream for StanzaReceiver {
+    type Item = Event;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        let Ok(mut stream) = self.0.try_lock() else {
+            return Poll::Pending;
+        };
+
+        stream.rx.poll_recv(cx)
     }
 }
