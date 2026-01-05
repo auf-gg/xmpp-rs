@@ -9,6 +9,7 @@ use xmpp_parsers::{
     jid::Jid,
     message::{Id, Message},
     presence::Presence,
+    stream_features::StreamFeatures,
 };
 use xso::{AsXml, FromXml};
 
@@ -125,6 +126,8 @@ pub enum Event {
         /// expected, so use this one instead of the JID with which
         /// the connection was setup.
         bound_jid: Jid,
+        /// Features supported by the server
+        features: StreamFeatures,
         /// Was this session resumed?
         ///
         /// Not yet implemented for the Client

@@ -46,7 +46,7 @@ impl Stream for Client {
                     bound_jid,
                     features,
                 })) => {
-                    self.features = Some(features);
+                    self.features = Some(features.clone());
                     self.bound_jid = Some(bound_jid.clone());
 
                     self.iq_response_tracker
@@ -54,11 +54,13 @@ impl Stream for Client {
 
                     Some(Event::Online {
                         bound_jid,
+                        features,
                         resumed: false,
                     })
                 }
                 Some(StanzaStreamEvent::Stream(StreamEvent::Resumed)) => Some(Event::Online {
                     bound_jid: self.bound_jid.as_ref().unwrap().clone(),
+                    features: self.features.as_ref().unwrap().clone(),
                     resumed: true,
                 }),
                 Some(StanzaStreamEvent::Stream(StreamEvent::Suspended)) => continue,
