@@ -252,7 +252,7 @@ impl IqResponseSink {
 }
 
 /// Utility struct to track IQ responses.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct IqResponseTracker {
     map: Arc<Mutex<IqMap>>,
     account_jid: Arc<Mutex<Option<BareJid>>>,

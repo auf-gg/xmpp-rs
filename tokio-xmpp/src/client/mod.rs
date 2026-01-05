@@ -4,17 +4,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::client::{receiver::ClientReceiver, sender::ClientSender};
+use crate::connect::ServerConnector;
+use crate::error::Error;
+use crate::event::Event;
+use crate::stanzastream::{self, StanzaStage, StanzaState, StanzaStream, StanzaToken};
+use crate::xmlstream::Timeouts;
+use crate::Stanza;
 use std::io;
-
+use std::sync::Arc;
+use tokio::sync::{mpsc, oneshot, Mutex};
+use tokio::task::JoinHandle;
 use xmpp_parsers::{jid::Jid, stream_features::StreamFeatures};
-
-use crate::{
-    connect::ServerConnector,
-    error::Error,
-    stanzastream::{StanzaStage, StanzaState, StanzaStream, StanzaToken},
-    xmlstream::Timeouts,
-    Stanza,
-};
 
 #[cfg(feature = "direct-tls")]
 use crate::connect::DirectTlsServerConnector;
@@ -27,10 +28,13 @@ use crate::connect::TcpServerConnector;
 
 mod iq;
 pub(crate) mod login;
+pub(crate) mod receiver;
+pub(crate) mod sender;
 mod stream;
-pub use login::auth;
+mod worker;
 
 pub use iq::{IqFailure, IqRequest, IqResponse, IqResponseToken};
+pub use login::auth;
 
 /// XMPP client connection and state
 ///
@@ -41,9 +45,19 @@ pub use iq::{IqFailure, IqRequest, IqResponse, IqResponseToken};
 /// used.
 #[derive(Debug)]
 pub struct Client {
-    stream: StanzaStream,
+    // Stanza receiver from the client worker
+    stanza_rx: mpsc::Receiver<Event>,
+    // Stanza sender to the StanzaStream
+    stream_tx: stanzastream::StanzaSender,
+    // Shutdown handle for the client worker
+    shutdown_tx: oneshot::Sender<()>,
+    // Client worker task
+    worker: JoinHandle<stanzastream::StanzaReceiver>,
+    // JID of the logged-in client
     bound_jid: Option<Jid>,
+    // Stream features of the currently connected stream
     features: Option<StreamFeatures>,
+    // Response tracker for IQs
     iq_response_tracker: iq::IqResponseTracker,
 }
 
@@ -72,7 +86,8 @@ impl Client {
     /// [`send_iq`][`Self::send_iq`], which allows awaiting the response.
     pub async fn send_stanza(&mut self, mut stanza: Stanza) -> Result<StanzaToken, io::Error> {
         stanza.ensure_id();
-        let mut token = self.stream.send(Box::new(stanza)).await;
+        let mut token = self.stream_tx.send(Box::new(stanza)).await;
+
         match token.wait_for(StanzaStage::Sent).await {
             // Queued < Sent, so it cannot be reached.
             Some(StanzaState::Queued) => unreachable!(),
@@ -93,13 +108,6 @@ impl Client {
     /// response. See also the documentation of [`IqResponseToken`] for more
     /// information on the behaviour of these tokens.
     ///
-    /// **Important**: Even though IQ responses are delivered through the
-    /// returned token (and never through the `Stream`), the
-    /// [`Stream`][`futures::Stream`]
-    /// implementation of the [`Client`] **must be polled** to make progress
-    /// on the stream and to process incoming stanzas and thus to deliver them
-    /// to the returned token.
-    ///
     /// **Note**: If an IQ response arrives after the `token` has been
     /// dropped (e.g. due to a timeout), it will be delivered through the
     /// `Stream` like any other stanza.
@@ -108,7 +116,8 @@ impl Client {
             // from is always None for a client
             None, to, req,
         );
-        let stanza_token = self.stream.send(Box::new(iq.into())).await;
+        let stanza_token = self.stream_tx.send(Box::new(iq.into())).await;
+
         token.set_stanza_token(stanza_token);
         token
     }
@@ -128,8 +137,41 @@ impl Client {
     /// This performs an orderly stream shutdown, ensuring that all resources
     /// are correctly cleaned up.
     pub async fn send_end(self) -> Result<(), Error> {
-        self.stream.close().await;
+        self.shutdown_tx.send(()).expect("ClientWorker crashed.");
+
+        let stream_rx = self.worker.await.unwrap();
+        let stream = StanzaStream::reunite(self.stream_tx, stream_rx);
+        stream.close().await;
+
         Ok(())
+    }
+
+    /// Split the client into [`ClientSender`] and [`ClientReceiver`].
+    pub fn split(self) -> (ClientSender, ClientReceiver) {
+        let client = Arc::new(Mutex::new(self));
+
+        let sender = ClientSender(client.clone());
+        let receiver = ClientReceiver(client);
+
+        (sender, receiver)
+    }
+
+    /// Reunite a [`ClientSender`] and [`ClientReceiver`].
+    ///
+    /// # Panics
+    ///
+    /// This functions returns an error if the [`ClientSender`] and
+    /// [`ClientReceiver`] don't come from the same [`Client`].
+    pub fn reunite(sender: ClientSender, receiver: ClientReceiver) -> Self {
+        assert!(
+            Arc::ptr_eq(&sender.0, &receiver.0),
+            "Unrelated ClientSender and ClientReceiver passed to reunite."
+        );
+
+        drop(sender);
+
+        let inner = Arc::try_unwrap(receiver.0).expect("Failed to unwrap ClientReceiver Arc");
+        inner.into_inner()
     }
 }
 
@@ -220,11 +262,23 @@ impl Client {
         connector: C,
         timeouts: Timeouts,
     ) -> Self {
+        let stream = StanzaStream::new_c2s(connector, jid.into(), password.into(), timeouts, 16);
+        let (stream_tx, stream_rx) = stream.split();
+
+        let iq_response_tracker = iq::IqResponseTracker::new();
+        let (worker, shutdown_tx, stanza_rx) =
+            worker::ClientWorker::new(stream_rx, iq_response_tracker.clone(), 16);
+
+        let worker = tokio::task::spawn(async move { worker.run().await });
+
         Self {
-            stream: StanzaStream::new_c2s(connector, jid.into(), password.into(), timeouts, 16),
+            stream_tx,
+            stanza_rx,
+            worker,
+            shutdown_tx,
+            iq_response_tracker,
             bound_jid: None,
             features: None,
-            iq_response_tracker: iq::IqResponseTracker::new(),
         }
     }
 }

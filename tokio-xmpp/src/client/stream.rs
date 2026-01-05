@@ -4,15 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use core::ops::ControlFlow;
 use core::{pin::Pin, task::Context};
 use futures::{ready, task::Poll, Stream};
 
-use crate::{
-    client::Client,
-    stanzastream::{Event as StanzaStreamEvent, StreamEvent},
-    Event, Stanza,
-};
+use crate::{client::Client, Event};
 
 /// Incoming XMPP events
 ///
@@ -32,39 +27,21 @@ impl Stream for Client {
     ///
     /// ...for your client
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        loop {
-            return Poll::Ready(match ready!(Pin::new(&mut self.stream).poll_next(cx)) {
-                None => None,
-                Some(StanzaStreamEvent::Stanza(st)) => match st {
-                    Stanza::Iq(iq) => match self.iq_response_tracker.handle_iq(iq) {
-                        ControlFlow::Break(()) => continue,
-                        ControlFlow::Continue(iq) => Some(Event::Stanza(Stanza::Iq(iq))),
-                    },
-                    other => Some(Event::Stanza(other)),
-                },
-                Some(StanzaStreamEvent::Stream(StreamEvent::Reset {
-                    bound_jid,
-                    features,
-                })) => {
-                    self.features = Some(features.clone());
+        Poll::Ready(match ready!(self.stanza_rx.poll_recv(cx)) {
+            None => None,
+            Some(event) => {
+                if let Event::Online {
+                    ref bound_jid,
+                    ref features,
+                    ..
+                } = event
+                {
                     self.bound_jid = Some(bound_jid.clone());
-
-                    self.iq_response_tracker
-                        .set_account_jid(bound_jid.to_bare());
-
-                    Some(Event::Online {
-                        bound_jid,
-                        features,
-                        resumed: false,
-                    })
+                    self.features = Some(features.clone());
                 }
-                Some(StanzaStreamEvent::Stream(StreamEvent::Resumed)) => Some(Event::Online {
-                    bound_jid: self.bound_jid.as_ref().unwrap().clone(),
-                    features: self.features.as_ref().unwrap().clone(),
-                    resumed: true,
-                }),
-                Some(StanzaStreamEvent::Stream(StreamEvent::Suspended)) => continue,
-            });
-        }
+
+                Some(event)
+            }
+        })
     }
 }
