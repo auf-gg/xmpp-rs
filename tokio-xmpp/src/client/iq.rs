@@ -306,10 +306,12 @@ impl IqResponseTracker {
         let mut map = self.map.lock().unwrap();
         match map.remove(&key) {
             None => {
-                log::trace!("not handling IQ response from {:?} with id {:?}: no active tracker for this tuple", key.0, key.1);
+                log::debug!("not handling IQ response from {:?} with id {:?}: no active tracker for this tuple", key.0, key.1);
+                log::trace!("active trackers: {map:?}");
                 ControlFlow::Continue(payload.into_iq(key.0, to, key.1))
             }
             Some(sink) => {
+                log::trace!("completing IQ {:?}", key.0);
                 sink.complete(payload);
                 ControlFlow::Break(())
             }
