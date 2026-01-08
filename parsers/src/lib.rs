@@ -314,6 +314,9 @@ pub mod fast;
 /// XEP-0490: Message Displayed Synchronization
 pub mod message_displayed;
 
+/// XEP-0494: Client Access Management
+pub mod cam;
+
 /// XEP-0507: Jingle Content Category
 pub mod jingle_content;
 

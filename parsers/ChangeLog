@@ -1,6 +1,7 @@
 Version NEXT:
 XXXX-YY-ZZ RELEASER <admin@example.com>
     * New parsers/serialisers:
+        - Client Access Management (XEP-0494) (!641)
         - Jingle Content Category (XEP-0507)
     * Breaking
         - The type of jingle_rtp::Description::ssrc has been changed from

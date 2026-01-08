@@ -310,6 +310,9 @@ pub const FAST: &str = "urn:xmpp:fast:0";
 /// XEP-0490: Message Displayed Synchronization
 pub const MDS: &str = "urn:xmpp:mds:displayed:0";
 
+/// XEP-0494: Client Access Management
+pub const CAM: &str = "urn:xmpp:cam:0";
+
 /// XEP-0507: Jingle Content Category
 pub const JINGLE_CONTENT: &str = "urn:xmpp:jingle:apps:category:0";
 
