@@ -9,6 +9,8 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
         - The ibr::Query struct has been split into FieldsQuery, RemoveQuery,
           LegacyQuery and FormsQuery, to make it reflect more how it gets
           used in XMPP.
+        - Remove the unnecessary SaslMechanisms struct, to directly extract
+          SASL mechanisms in a Vec<String> in StreamFeatures.
     * Improvements:
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)

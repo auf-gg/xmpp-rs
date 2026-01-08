@@ -5,14 +5,14 @@ use sasl::client::mechanisms::{Anonymous, Plain, Scram};
 use sasl::client::Mechanism;
 use sasl::common::scram::{Sha1, Sha256};
 use sasl::common::Credentials;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::io;
 use tokio::io::{AsyncBufRead, AsyncWrite};
 use xmpp_parsers::{
     jid::Jid,
     ns,
     sasl::{Auth, Mechanism as XMPPMechanism, Nonza, Response},
-    stream_features::{SaslMechanisms, StreamFeatures},
+    stream_features::StreamFeatures,
 };
 
 use crate::{
@@ -30,7 +30,7 @@ use crate::{
 /// this returns the `stream` as [`InitiatingStream`] on success.
 pub async fn auth<S: AsyncBufRead + AsyncWrite + Unpin>(
     mut stream: XmppStream<S>,
-    sasl_mechanisms: &SaslMechanisms,
+    sasl_mechanisms: BTreeSet<String>,
     creds: Credentials,
 ) -> Result<InitiatingStream<S>, Error> {
     let local_mechs: Vec<Box<dyn Fn() -> Box<dyn Mechanism + Send + Sync> + Send>> = vec![
@@ -40,11 +40,9 @@ pub async fn auth<S: AsyncBufRead + AsyncWrite + Unpin>(
         Box::new(|| Box::new(Anonymous::new())),
     ];
 
-    let remote_mechs: HashSet<String> = sasl_mechanisms.mechanisms.iter().cloned().collect();
-
     for local_mech in local_mechs {
         let mut mechanism = local_mech();
-        if remote_mechs.contains(mechanism.name()) {
+        if sasl_mechanisms.contains(mechanism.name()) {
             let initial = mechanism.initial();
             let mechanism_name =
                 XMPPMechanism::from_str(mechanism.name()).map_err(ProtocolError::Parsers)?;
@@ -124,7 +122,7 @@ pub async fn client_auth<C: ServerConnector>(
         .with_password(password)
         .with_channel_binding(channel_binding);
     // Authenticated (unspecified) stream
-    let stream = auth(xmpp_stream, &features.sasl_mechanisms, creds).await?;
+    let stream = auth(xmpp_stream, features.sasl_mechanisms, creds).await?;
     let stream = stream
         .send_header(StreamHeader {
             to: Some(Cow::Borrowed(jid.domain().as_str())),

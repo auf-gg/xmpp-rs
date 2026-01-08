@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use alloc::collections::BTreeSet;
 use minidom::Element;
 use xso::{AsXml, FromXml};
 
@@ -28,8 +29,10 @@ pub struct StreamFeatures {
     pub bind: Option<BindFeature>,
 
     /// List of supported SASL mechanisms
-    #[xml(child(default))]
-    pub sasl_mechanisms: SaslMechanisms,
+    #[xml(extract(default, namespace = ns::SASL, name = "mechanisms", fields(
+        extract(n = .., name = "mechanism", fields(text(type_ = String)))
+    )))]
+    pub sasl_mechanisms: BTreeSet<String>,
 
     /// Limits advertised by the server.
     #[xml(child(default))]
@@ -59,15 +62,6 @@ pub struct StreamFeatures {
     pub others: Vec<Element>,
 }
 
-/// List of supported SASL mechanisms
-#[derive(FromXml, AsXml, PartialEq, Debug, Clone, Default)]
-#[xml(namespace = ns::SASL, name = "mechanisms")]
-pub struct SaslMechanisms {
-    /// List of information elements describing this SASL mechanism.
-    #[xml(extract(n = .., name = "mechanism", fields(text(type_ = String))))]
-    pub mechanisms: Vec<String>,
-}
-
 impl StreamFeatures {
     /// Can initiate TLS session with this server?
     pub fn can_starttls(&self) -> bool {
@@ -88,14 +82,12 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(SaslMechanisms, 12);
         assert_size!(StreamFeatures, 92);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(SaslMechanisms, 24);
         assert_size!(StreamFeatures, 168);
     }
 
@@ -112,10 +104,10 @@ mod tests {
             .unwrap();
 
         let features = StreamFeatures::try_from(elem).unwrap();
-        assert_eq!(
-            features.sasl_mechanisms.mechanisms,
-            ["PLAIN", "SCRAM-SHA-1", "SCRAM-SHA-1-PLUS"]
-        );
+        assert!(features.sasl_mechanisms.contains("PLAIN"));
+        assert!(features.sasl_mechanisms.contains("SCRAM-SHA-1"));
+        assert!(features.sasl_mechanisms.contains("SCRAM-SHA-1-PLUS"));
+        assert!(!features.sasl_mechanisms.contains("CRAM-MD5"));
     }
 
     #[test]
@@ -131,7 +123,7 @@ mod tests {
         let features = StreamFeatures::try_from(elem).unwrap();
 
         assert_eq!(features.can_bind(), false);
-        assert_eq!(features.sasl_mechanisms.mechanisms.len(), 0);
+        assert_eq!(features.sasl_mechanisms.len(), 0);
         assert_eq!(features.can_starttls(), true);
         assert_eq!(features.starttls.unwrap().required, true);
     }
@@ -151,7 +143,7 @@ mod tests {
         let features = StreamFeatures::try_from(elem).unwrap();
 
         assert_eq!(features.can_bind(), true);
-        assert_eq!(features.sasl_mechanisms.mechanisms.len(), 0);
+        assert_eq!(features.sasl_mechanisms.len(), 0);
         assert_eq!(features.can_starttls(), false);
         assert_eq!(features.others.len(), 1);
 
@@ -181,7 +173,7 @@ mod tests {
         let features = StreamFeatures::try_from(elem).unwrap();
 
         assert_eq!(features.can_bind(), false);
-        assert_eq!(features.sasl_mechanisms.mechanisms.len(), 0);
+        assert_eq!(features.sasl_mechanisms.len(), 0);
         assert_eq!(features.can_starttls(), false);
     }
 }
