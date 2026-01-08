@@ -9,7 +9,7 @@ use tokio_xmpp::{Client, Stanza};
 use xmpp_parsers::{
     avatar::{Data as AvatarData, Metadata as AvatarMetadata},
     caps::{compute_disco, hash_caps, Caps},
-    disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
+    disco::{DiscoInfoQuery, DiscoInfoResult, Identity},
     hashes::Algo,
     iq::Iq,
     jid::{BareJid, Jid},
@@ -185,8 +185,8 @@ fn make_error(
 fn make_disco() -> DiscoInfoResult {
     let identities = vec![Identity::new("client", "bot", "en", "tokio-xmpp")];
     let features = vec![
-        Feature::new(ns::DISCO_INFO),
-        Feature::new(format!("{}+notify", ns::AVATAR_METADATA)),
+        String::from(ns::DISCO_INFO),
+        format!("{}+notify", ns::AVATAR_METADATA),
     ];
     DiscoInfoResult {
         node: None,

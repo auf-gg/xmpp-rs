@@ -7,7 +7,7 @@
 use xso::{AsXml, FromXml};
 
 use crate::data_forms::DataForm;
-use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
+use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Identity};
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
@@ -64,8 +64,8 @@ fn compute_items<'x, T: 'x, I: IntoIterator<Item = &'x T>, F: Fn(&'x T) -> Vec<u
     string
 }
 
-fn compute_features(features: &[Feature]) -> Vec<u8> {
-    compute_items(features, 0x1c, |feature| compute_item(&feature.var))
+fn compute_features(features: &[String]) -> Vec<u8> {
+    compute_items(features, 0x1c, |feature| compute_item(&feature))
 }
 
 fn compute_identities(identities: &[Identity]) -> Vec<u8> {

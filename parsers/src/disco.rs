@@ -26,22 +26,6 @@ pub struct DiscoInfoQuery {
 
 impl IqGetPayload for DiscoInfoQuery {}
 
-/// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
-#[derive(FromXml, AsXml, Debug, Clone, PartialEq, Eq, Hash)]
-#[xml(namespace = ns::DISCO_INFO, name = "feature")]
-pub struct Feature {
-    /// Namespace of the feature we want to represent.
-    #[xml(attribute)]
-    pub var: String,
-}
-
-impl Feature {
-    /// Create a new `<feature/>` with the according `@var`.
-    pub fn new<S: Into<String>>(var: S) -> Feature {
-        Feature { var: var.into() }
-    }
-}
-
 /// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(FromXml, AsXml, Debug, Clone, PartialEq, Eq, Hash)]
 #[xml(namespace = ns::DISCO_INFO, name = "identity")]
@@ -113,8 +97,8 @@ pub struct DiscoInfoResult {
     pub identities: Vec<Identity>,
 
     /// List of features supported by this entity.
-    #[xml(child(n = ..))]
-    pub features: Vec<Feature>,
+    #[xml(extract(n = .., name = "feature", fields(attribute(name = "var", type_ = String))))]
+    pub features: Vec<String>,
 
     /// List of extensions reported by this entity.
     #[xml(child(n = ..))]
@@ -192,7 +176,6 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Identity, 48);
-        assert_size!(Feature, 12);
         assert_size!(DiscoInfoQuery, 12);
         assert_size!(DiscoInfoResult, 48);
 
@@ -205,7 +188,6 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Identity, 96);
-        assert_size!(Feature, 24);
         assert_size!(DiscoInfoQuery, 24);
         assert_size!(DiscoInfoResult, 96);
 
@@ -325,9 +307,11 @@ mod tests {
             FromElementError::Invalid(Error::Other(string)) => string,
             _ => panic!(),
         };
+        // TODO: Make xso generate a better error message, with s/unnamed field 0/'var'/ for
+        // instance.
         assert_eq!(
             message,
-            "Required attribute field 'var' on Feature element missing."
+            "Required attribute unnamed field 0 on extraction for field 'features' in DiscoInfoResult element missing."
         );
     }
 

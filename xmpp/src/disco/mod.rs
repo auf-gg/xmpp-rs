@@ -25,12 +25,9 @@ pub async fn handle_disco_info_result(agent: &mut Agent, disco: DiscoInfoResult,
         // Trigger bookmarks query
         // TODO: only send this when the JoinRooms feature is enabled.
         agent.awaiting_disco_bookmarks_type = false;
-        let mut perform_bookmarks2 = false;
-        for feature in disco.features {
-            if feature.var == "urn:xmpp:bookmarks:1#compat" {
-                perform_bookmarks2 = true;
-            }
-        }
+        let perform_bookmarks2 = disco
+            .features
+            .contains(&String::from("urn:xmpp:bookmarks:1#compat"));
 
         if perform_bookmarks2 {
             // XEP-0402 bookmarks (modern)

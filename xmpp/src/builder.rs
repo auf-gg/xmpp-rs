@@ -11,7 +11,7 @@ use crate::{
     Agent, ClientFeature, ClientType, Config, RoomNick,
     jid::{BareJid, Jid, ResourceRef},
     parsers::{
-        disco::{DiscoInfoResult, Feature, Identity},
+        disco::{DiscoInfoResult, Identity},
         ns,
     },
     tokio_xmpp::{Client as TokioXmppClient, connect::ServerConnector, xmlstream::Timeouts},
@@ -107,15 +107,15 @@ impl<C: ServerConnector> ClientBuilder<'_, C> {
             "en",
             self.config.disco.1.to_string(),
         )];
-        let mut features = vec![Feature::new(ns::DISCO_INFO)];
+        let mut features = vec![String::from(ns::DISCO_INFO)];
         #[cfg(feature = "avatars")]
         {
             if self.features.contains(&ClientFeature::Avatars) {
-                features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
+                features.push(format!("{}+notify", ns::AVATAR_METADATA));
             }
         }
         if self.features.contains(&ClientFeature::JoinRooms) {
-            features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS2)));
+            features.push(format!("{}+notify", ns::BOOKMARKS2));
         }
         DiscoInfoResult {
             node: None,
