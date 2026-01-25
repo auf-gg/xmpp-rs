@@ -13,6 +13,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
           SASL mechanisms in a Vec<String> in StreamFeatures.
         - bind::BindFeature::required is now a bool, thanks to xso’s flag.
         - jingle_rtp::Description::rtcp_mux is now a bool flag too.
+        - stream_limits::Limits now extract directly to NonZeroU32.
     * Improvements:
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)

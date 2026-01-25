@@ -15,35 +15,13 @@ use core::num::NonZeroU32;
 pub struct Limits {
     /// Maximum size of any first-level stream elements (including stanzas), in bytes the
     /// announcing entity is willing to accept.
-    // TODO: Replace that with a direct u32 once xso supports that.
-    #[xml(child(default))]
-    pub max_bytes: Option<MaxBytes>,
+    #[xml(extract(default, name = "max-bytes", fields(text(type_ = NonZeroU32))))]
+    pub max_bytes: Option<NonZeroU32>,
 
     /// Number of seconds without any traffic from the initiating entity after which the server may
     /// consider the stream idle, and either perform liveness checks or terminate the stream.
-    // TODO: Replace that with a direct u32 once xso supports that.
-    #[xml(child(default))]
-    pub idle_seconds: Option<IdleSeconds>,
-}
-
-/// Maximum size of any first-level stream elements (including stanzas), in bytes the
-/// announcing entity is willing to accept.
-#[derive(FromXml, AsXml, Debug, Clone, PartialEq)]
-#[xml(namespace = ns::STREAM_LIMITS, name = "max-bytes")]
-pub struct MaxBytes {
-    /// The number of bytes.
-    #[xml(text)]
-    pub value: NonZeroU32,
-}
-
-/// Number of seconds without any traffic from the initiating entity after which the server may
-/// consider the stream idle, and either perform liveness checks or terminate the stream.
-#[derive(FromXml, AsXml, Debug, Clone, PartialEq)]
-#[xml(namespace = ns::STREAM_LIMITS, name = "idle-seconds")]
-pub struct IdleSeconds {
-    /// The number of seconds.
-    #[xml(text)]
-    pub value: NonZeroU32,
+    #[xml(extract(default, name = "idle-seconds", fields(text(type_ = NonZeroU32))))]
+    pub idle_seconds: Option<NonZeroU32>,
 }
 
 #[cfg(test)]
@@ -54,8 +32,6 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Limits, 8);
-        assert_size!(MaxBytes, 4);
-        assert_size!(IdleSeconds, 4);
     }
 
     #[test]
@@ -65,10 +41,7 @@ mod tests {
                 .parse()
                 .unwrap();
         let limits = Limits::try_from(elem).unwrap();
-        assert_eq!(
-            limits.max_bytes.unwrap().value,
-            NonZeroU32::new(262144).unwrap()
-        );
+        assert_eq!(limits.max_bytes.unwrap(), NonZeroU32::new(262144).unwrap());
         assert!(limits.idle_seconds.is_none());
     }
 }
