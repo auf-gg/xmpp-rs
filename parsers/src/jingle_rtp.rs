@@ -11,12 +11,6 @@ use crate::jingle_rtp_hdrext::RtpHdrext;
 use crate::jingle_ssma::{Group, Source};
 use crate::ns;
 
-/// Specifies the ability to multiplex RTP Data and Control Packets on a single port as
-/// described in RFC 5761.
-#[derive(FromXml, AsXml, PartialEq, Debug, Clone)]
-#[xml(namespace = ns::JINGLE_RTP, name = "rtcp-mux")]
-pub struct RtcpMux;
-
 /// Wrapper element describing an RTP session.
 #[derive(FromXml, AsXml, PartialEq, Debug, Clone)]
 #[xml(namespace = ns::JINGLE_RTP, name = "description")]
@@ -36,8 +30,8 @@ pub struct Description {
 
     /// Specifies the ability to multiplex RTP Data and Control Packets on a single port as
     /// described in RFC 5761.
-    #[xml(child(default))]
-    pub rtcp_mux: Option<RtcpMux>,
+    #[xml(flag(name = "rtcp-mux"))]
+    pub rtcp_mux: bool,
 
     /// List of ssrc-group.
     #[xml(child(n = ..))]
@@ -60,7 +54,7 @@ impl Description {
             media,
             ssrc: None,
             payload_types: Vec::new(),
-            rtcp_mux: None,
+            rtcp_mux: false,
             ssrc_groups: Vec::new(),
             ssrcs: Vec::new(),
             hdrexts: Vec::new(),
@@ -208,11 +202,13 @@ mod tests {
     <payload-type xmlns='urn:xmpp:jingle:apps:rtp:1' clockrate='8000' id='102' name='telephone-event'>
         <parameter xmlns='urn:xmpp:jingle:apps:rtp:1' name='events' value='0-15'/>
     </payload-type>
+    <rtcp-mux/>
 </description>"
                 .parse()
                 .unwrap();
         let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.media, "audio");
         assert_eq!(desc.ssrc, None);
+        assert_eq!(desc.rtcp_mux, true);
     }
 }
