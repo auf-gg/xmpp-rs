@@ -60,6 +60,7 @@ mod tests {
     fn test_size() {
         assert_size!(Request, 0);
         assert_size!(Proceed, 0);
+        assert_size!(Failure, 0);
         assert_size!(StartTls, 1);
         assert_size!(Nonza, 1);
     }

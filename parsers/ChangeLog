@@ -11,6 +11,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
           used in XMPP.
         - Remove the unnecessary SaslMechanisms struct, to directly extract
           SASL mechanisms in a Vec<String> in StreamFeatures.
+        - bind::BindFeature::required is now a bool, thanks to xso’s flag.
     * Improvements:
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)

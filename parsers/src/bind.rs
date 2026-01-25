@@ -15,14 +15,9 @@ use jid::{FullJid, Jid};
 #[xml(namespace = ns::BIND, name = "bind")]
 pub struct BindFeature {
     /// Present if bind is required.
-    #[xml(child(default))]
-    required: Option<Required>,
+    #[xml(flag)]
+    required: bool,
 }
-
-/// Notes that bind is required.
-#[derive(FromXml, AsXml, Debug, Clone, PartialEq)]
-#[xml(namespace = ns::BIND, name = "required")]
-pub struct Required;
 
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
@@ -84,7 +79,6 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(BindFeature, 1);
-        assert_size!(Required, 0);
         assert_size!(BindQuery, 12);
         assert_size!(BindResponse, 16);
     }
@@ -93,7 +87,6 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(BindFeature, 1);
-        assert_size!(Required, 0);
         assert_size!(BindQuery, 24);
         assert_size!(BindResponse, 32);
     }
