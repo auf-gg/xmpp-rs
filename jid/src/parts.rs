@@ -320,6 +320,54 @@ impl NodeRef {
     pub fn with_domain(&self, domain: &DomainRef) -> BareJid {
         BareJid::from_parts(Some(self), domain)
     }
+
+    /// Implements XEP-0106 unescape algorithm.
+    pub fn unescape(&self) -> Result<Cow<'_, str>, Error> {
+        fn hex_to_char(bytes: [u8; 2]) -> Result<char, ()> {
+            Ok(match &[bytes[0], bytes[1]] {
+                b"20" => ' ',
+                b"22" => '"',
+                b"26" => '&',
+                b"27" => '\'',
+                b"2f" => '/',
+                b"3a" => ':',
+                b"3c" => '<',
+                b"3e" => '>',
+                b"40" => '@',
+                b"5c" => '\\',
+                _ => return Err(()),
+            })
+        }
+
+        let bytes = self.0.as_bytes();
+        let mut iter = memchr::memchr_iter(b'\\', bytes).peekable();
+
+        // Fast path in case there is no character to unescape.
+        if iter.peek().is_none() {
+            return Ok(Cow::Borrowed(self));
+        }
+
+        let mut buf = String::with_capacity(bytes.len());
+        let mut valid_up_to = 0;
+        for index in iter {
+            buf.push_str(&self.0[valid_up_to..index]);
+            match hex_to_char([bytes[index + 1], bytes[index + 2]]) {
+                Ok(char) => {
+                    buf.push(char);
+                    valid_up_to = index + 3;
+                }
+                // If the escape code wasn’t valid, we want to copy it as is.
+                Err(()) => valid_up_to = index,
+            }
+        }
+        buf.push_str(&self.0[valid_up_to..]);
+
+        if buf.starts_with(' ') || buf.ends_with(' ') {
+            return Err(Error::NodePrep);
+        }
+
+        Ok(Cow::Owned(buf))
+    }
 }
 
 #[cfg(test)]
@@ -465,5 +513,54 @@ mod tests {
             ],
             "resource doesn’t pass resourceprep validation",
         );
+    }
+
+    #[test]
+    fn unescape() {
+        let node = NodePart::new("foo\\40bar").unwrap();
+        assert_eq!(node.unescape().unwrap(), "foo@bar");
+
+        let node = NodePart::new("\\22\\26\\27\\2f\\20\\3a\\3c\\3e\\40\\5c").unwrap();
+        assert_eq!(node.unescape().unwrap(), "\"&'/ :<>@\\");
+
+        let node = NodePart::new("\\20foo").unwrap();
+        node.unescape().unwrap_err();
+
+        let node = NodePart::new("foo\\20").unwrap();
+        node.unescape().unwrap_err();
+
+        let jid = BareJid::new("tréville\\40musketeers.lit@smtp.gascon.fr").unwrap();
+        let node = jid.node().unwrap();
+        assert_eq!(node.unescape().unwrap(), "tréville@musketeers.lit");
+
+        // Those come from section 5.1 from the XEP.
+        let data = [
+            ("space cadet@example.com", "space\\20cadet@example.com"),
+            (
+                "call me \"ishmael\"@example.com",
+                "call\\20me\\20\\22ishmael\\22@example.com",
+            ),
+            ("at&t guy@example.com", "at\\26t\\20guy@example.com"),
+            ("d'artagnan@example.com", "d\\27artagnan@example.com"),
+            ("/.fanboy@example.com", "\\2f.fanboy@example.com"),
+            ("::foo::@example.com", "\\3a\\3afoo\\3a\\3a@example.com"),
+            ("<foo>@example.com", "\\3cfoo\\3e@example.com"),
+            ("user@host@example.com", "user\\40host@example.com"),
+            ("c:\\net@example.com", "c\\3a\\net@example.com"),
+            ("c:\\\\net@example.com", "c\\3a\\\\net@example.com"),
+            (
+                "c:\\cool stuff@example.com",
+                "c\\3a\\cool\\20stuff@example.com",
+            ),
+            ("c:\\5commas@example.com", "c\\3a\\5c5commas@example.com"),
+        ];
+        for (unescaped, escaped) in data {
+            let jid = BareJid::new(escaped).unwrap();
+            let node = jid.node().unwrap();
+            assert_eq!(
+                alloc::format!("{}@example.com", node.unescape().unwrap()),
+                unescaped
+            );
+        }
     }
 }
