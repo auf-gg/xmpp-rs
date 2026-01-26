@@ -11,6 +11,45 @@ use crate::jingle_rtp_hdrext::RtpHdrext;
 use crate::jingle_ssma::{Group, Source};
 use crate::ns;
 
+generate_attribute!(
+    /// Value for the SDP "bwtype" parameter as listed in the IANA Session Description Protocol
+    /// Parameters Registry: <https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml>
+    ///
+    /// See RFC8859.
+    BwType, "type", {
+        /// Not impacted.
+        Ct => "CT",
+
+        /// For media-level usage, the aggregate of individual bandwidth values is considered.
+        As => "AS",
+
+        /// Session-level usage represents session aggregate, and media-level usage indicates SUM
+        /// of the individual values while multiplexing.
+        Rs => "RS",
+
+        /// Session-level usage represents session aggregate, and media-level usage indicates SUM
+        /// of the individual values while multiplexing.
+        Rr => "RR",
+
+        /// Transport Independent Application Specific Maximum (TIAS) bandwidth modifier that does
+        /// not include transport overhead.
+        Tias => "TIAS",
+    }
+);
+
+/// Allowable or preferred bandwidth for use by this application type.
+#[derive(FromXml, AsXml, PartialEq, Debug, Clone)]
+#[xml(namespace = ns::JINGLE_RTP, name = "description")]
+pub struct Bandwidth {
+    /// Value for the SDP "bwtype" parameter as listed in the IANA Session Description Protocol
+    /// Parameters Registry: <https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml>
+    #[xml(attribute)]
+    type_: BwType,
+
+    #[xml(text)]
+    value: u32,
+}
+
 /// Wrapper element describing an RTP session.
 #[derive(FromXml, AsXml, PartialEq, Debug, Clone)]
 #[xml(namespace = ns::JINGLE_RTP, name = "description")]
@@ -44,7 +83,11 @@ pub struct Description {
     /// List of header extensions.
     #[xml(child(n = ..))]
     pub hdrexts: Vec<RtpHdrext>,
-    // TODO: Add support for <encryption/> and <bandwidth/>.
+
+    /// Allowable or preferred bandwidth for use by this application type.
+    #[xml(child(default))]
+    pub bandwidth: Option<Bandwidth>,
+    // TODO: Add support for <encryption/>.
 }
 
 impl Description {
@@ -58,6 +101,7 @@ impl Description {
             ssrc_groups: Vec::new(),
             ssrcs: Vec::new(),
             hdrexts: Vec::new(),
+            bandwidth: None,
         }
     }
 }
@@ -162,7 +206,9 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Description, 72);
+        assert_size!(BwType, 1);
+        assert_size!(Bandwidth, 8);
+        assert_size!(Description, 80);
         assert_size!(Channels, 1);
         assert_size!(PayloadType, 64);
         assert_size!(Parameter, 24);
@@ -171,7 +217,9 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Description, 136);
+        assert_size!(BwType, 1);
+        assert_size!(Bandwidth, 8);
+        assert_size!(Description, 144);
         assert_size!(Channels, 1);
         assert_size!(PayloadType, 104);
         assert_size!(Parameter, 48);

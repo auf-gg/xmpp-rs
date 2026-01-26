@@ -19,6 +19,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
           conversion to xso. (!632)
         - ibr::LegacyQuery now implements Default, allowing users to more
           easily construct it (!660)
+        - jingle_rtp::Description gained a bandwidth child.
 
 Version 0.22.0:
 2025-10-28 pep <pep@bouah.net>
