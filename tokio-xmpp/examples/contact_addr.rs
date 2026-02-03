@@ -31,13 +31,12 @@ async fn main() {
     // Client instance
     let mut client = Client::new(jid, password);
 
-    let token = client
+    let mut token = client
         .send_iq(
             Some(target),
             IqRequest::Get(DiscoInfoQuery { node: None }.into()),
         )
         .await;
-    tokio::pin!(token);
 
     // Main loop, processes events
     loop {
