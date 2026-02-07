@@ -23,11 +23,11 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use core::borrow::Borrow;
+use core::hash::Hash;
 use core::slice;
 use core::str::FromStr;
 
-use std::borrow::Borrow;
-use std::hash::Hash;
 use std::io;
 
 use rxml::writer::{Encoder, Item, TrackNamespace};
