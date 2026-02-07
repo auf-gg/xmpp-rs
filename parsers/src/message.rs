@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::ns;
+use alloc::borrow::Cow;
+use alloc::collections::BTreeMap;
+use core::borrow::Borrow;
 use core::fmt;
 use core::ops::{Deref, DerefMut};
-use std::borrow::{Borrow, Cow};
-
-use crate::ns;
-use alloc::collections::BTreeMap;
 use jid::Jid;
 use minidom::Element;
 use xso::{
