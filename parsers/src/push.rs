@@ -64,7 +64,7 @@ impl PubSubPayload for Notification {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
+    use core::str::FromStr;
 
     #[test]
     fn test_enable() {
