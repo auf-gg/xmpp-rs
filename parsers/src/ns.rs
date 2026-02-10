@@ -310,6 +310,9 @@ pub const FAST: &str = "urn:xmpp:fast:0";
 /// XEP-0490: Message Displayed Synchronization
 pub const MDS: &str = "urn:xmpp:mds:displayed:0";
 
+/// XEP-0507: Jingle Content Category
+pub const JINGLE_CONTENT: &str = "urn:xmpp:jingle:apps:category:0";
+
 /// Alias for the main namespace of the stream, that is "jabber:client" when
 /// the component feature isn’t enabled.
 #[cfg(not(feature = "component"))]

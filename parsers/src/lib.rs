@@ -314,6 +314,9 @@ pub mod fast;
 /// XEP-0490: Message Displayed Synchronization
 pub mod message_displayed;
 
+/// XEP-0507: Jingle Content Category
+pub mod jingle_content;
+
 #[cfg(test)]
 mod tests {
     #[test]
