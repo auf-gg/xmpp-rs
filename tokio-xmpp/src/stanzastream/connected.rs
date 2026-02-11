@@ -543,6 +543,9 @@ impl ConnectedState {
                 match item {
                     // Easy case, we got some data.
                     Ok(XmppStreamElement::Stanza(data)) => {
+                        if let Some(sm_state) = sm_state.as_mut() {
+                            sm_state.received();
+                        }
                         Poll::Ready(Some(ConnectedEvent::Worker(WorkerEvent::Stanza(data))))
                     }
 

@@ -21,6 +21,9 @@ pub(crate) fn make_id() -> String {
 }
 
 /// A stanza sent/received over the stream.
+// WARNING: do not add variants to this enum! Adding variants which refer
+// to anything but IQ, Message or Presence stanzas will cause the
+// stream management counters to be off.
 #[derive(FromXml, AsXml, Debug, PartialEq)]
 #[xml()]
 pub enum Stanza {

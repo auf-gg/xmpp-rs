@@ -8,6 +8,8 @@ Version NEXT:
       - Gate `AsRawFd` behind `ktls` feature to make Windows build work again.
       - Implicitly use the `Client`'s bound JID on empty `to` in tokio-xmpp's
         `IqResponseTracker`.
+      - Actually count inbound stream management stanzas (!657) instead of
+        always sending h='0' in our `<a/>`.
 
 Version 5.0.0:
 2025-10-28 pep <pep@bouah.net>

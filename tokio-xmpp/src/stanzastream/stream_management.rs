@@ -214,6 +214,11 @@ impl SmState {
         self.inbound_ctr
     }
 
+    /// Increase the inbound counter.
+    pub fn received(&mut self) {
+        self.inbound_ctr = self.inbound_ctr.wrapping_add(1);
+    }
+
     /// Get the info necessary for resumption.
     ///
     /// Returns the stream ID and the current inbound counter if resumption is
