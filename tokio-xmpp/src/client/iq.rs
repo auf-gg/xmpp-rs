@@ -278,7 +278,7 @@ impl IqResponseTracker {
     /// Returns the IQ stanza unharmed if it is not an IQ response matching
     /// any request which is still being tracked.
     pub fn handle_iq(&self, iq: Iq) -> ControlFlow<(), Iq> {
-        let (from, to, id, payload) = match iq {
+        let (mut from, to, id, payload) = match iq {
             Iq::Error {
                 from,
                 to,
@@ -294,6 +294,14 @@ impl IqResponseTracker {
             } => (from, to, id, IqResponse::Result(payload)),
             _ => return ControlFlow::Continue(iq),
         };
+
+        if from.is_none() {
+            // Implicitly setting None to the JID the tracker is active for in case the server
+            // doesn't. This ensures that the IQ can be matched in the map again.
+            let account_jid = self.account_jid.lock().unwrap();
+            from = account_jid.clone().map(Jid::from);
+        }
+
         let key = (from, id);
         let mut map = self.map.lock().unwrap();
         match map.remove(&key) {

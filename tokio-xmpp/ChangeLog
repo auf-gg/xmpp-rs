@@ -6,8 +6,8 @@ Version NEXT:
     * Fixed:
       - Ignore missing "version" stream attribute for 0114 components.
       - Gate `AsRawFd` behind `ktls` feature to make Windows build work again.
-      - Implicitly use the `Client`'s bound JID on empty `to` in tokio-xmpp's
-        `IqResponseTracker`.
+      - Implicitly use the `Client`'s bound JID on empty `from` and `to` in
+        tokio-xmpp's `IqResponseTracker`.
       - Actually count inbound stream management stanzas (!657) instead of
         always sending h='0' in our `<a/>`.
 
