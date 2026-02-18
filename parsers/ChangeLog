@@ -12,6 +12,8 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
     * Improvements:
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)
+        - ibr::LegacyQuery now implements Default, allowing users to more
+          easily construct it (!660)
 
 Version 0.22.0:
 2025-10-28 pep <pep@bouah.net>

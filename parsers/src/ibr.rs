@@ -30,7 +30,7 @@ pub struct RemoveQuery {
 impl IqSetPayload for RemoveQuery {}
 
 /// Query for registering against a service, the legacy way.
-#[derive(FromXml, AsXml, Debug, Clone)]
+#[derive(FromXml, AsXml, Debug, Clone, Default)]
 #[xml(namespace = ns::REGISTER, name = "query")]
 pub struct LegacyQuery {
     /// Whether this account is already registered
