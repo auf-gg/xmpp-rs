@@ -1,6 +1,7 @@
 Version NEXT:
     * Changes
       - Fix some Clippy warnings
+      - Fix build with minidom and without std (!661)
 
 Version 0.3.0, release 2025-10-28:
     * Changes

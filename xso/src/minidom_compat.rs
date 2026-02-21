@@ -9,6 +9,7 @@
 use alloc::{
     borrow::{Cow, ToOwned},
     boxed::Box,
+    string::String,
     vec::IntoIter,
 };
 use core::marker::PhantomData;
@@ -156,7 +157,7 @@ enum AsXmlState<'a> {
         element: &'a Element,
 
         /// Attribute iterator.
-        attributes: rxml::xml_map::Iter<'a, std::string::String>,
+        attributes: rxml::xml_map::Iter<'a, String>,
     },
 
     /// Content: The contents of the element are streamed as events.
