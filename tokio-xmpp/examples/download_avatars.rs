@@ -1,4 +1,5 @@
 use futures::stream::StreamExt;
+use std::collections::BTreeSet;
 use std::env::args;
 use std::fs::{create_dir_all, File};
 use std::io::{self, Write};
@@ -184,10 +185,10 @@ fn make_error(
 
 fn make_disco() -> DiscoInfoResult {
     let identities = vec![Identity::new("client", "bot", "en", "tokio-xmpp")];
-    let features = vec![
+    let features = BTreeSet::from([
         String::from(ns::DISCO_INFO),
         format!("{}+notify", ns::AVATAR_METADATA),
-    ];
+    ]);
     DiscoInfoResult {
         node: None,
         identities,

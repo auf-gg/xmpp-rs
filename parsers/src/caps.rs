@@ -125,8 +125,11 @@ fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
 /// [ecaps2](../ecaps2/index.html) instead, see [this
 /// email](https://mail.jabber.org/pipermail/security/2009-July/000812.html).
 pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
+    // TODO: Figure out a way to remove the clones here.
+    let features: Vec<_> = disco.features.iter().cloned().collect();
+
     let identities_string = compute_identities(&disco.identities);
-    let features_string = compute_features(&disco.features);
+    let features_string = compute_features(&features);
     let extensions_string = compute_extensions(&disco.extensions);
 
     let mut final_string = vec![];

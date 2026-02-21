@@ -124,7 +124,10 @@ fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, Error> {
 /// XEP-0390](https://xmpp.org/extensions/xep-0390.html#algorithm-input) on a
 /// [disco#info query element](../disco/struct.DiscoInfoResult.html).
 pub fn compute_disco(disco: &DiscoInfoResult) -> Result<Vec<u8>, Error> {
-    let features_string = compute_features(&disco.features);
+    // TODO: Figure out a way to remove the clones here.
+    let features: Vec<_> = disco.features.iter().cloned().collect();
+
+    let features_string = compute_features(&features);
     let identities_string = compute_identities(&disco.identities);
     let extensions_string = compute_extensions(&disco.extensions)?;
 

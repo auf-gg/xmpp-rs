@@ -10,6 +10,7 @@ use crate::data_forms::DataForm;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use crate::rsm::{SetQuery, SetResult};
+use alloc::collections::BTreeSet;
 use jid::Jid;
 
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -98,7 +99,7 @@ pub struct DiscoInfoResult {
 
     /// List of features supported by this entity.
     #[xml(extract(n = .., name = "feature", fields(attribute(name = "var", type_ = String))))]
-    pub features: Vec<String>,
+    pub features: BTreeSet<String>,
 
     /// List of extensions reported by this entity.
     #[xml(child(n = ..))]

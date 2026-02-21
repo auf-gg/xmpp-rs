@@ -13,7 +13,8 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
         - Remove the unnecessary SaslMechanisms struct, to directly extract
           SASL mechanisms in a Vec<String> in StreamFeatures.
         - The type of disco::DiscoInfoResult::features changed from
-          Vec<Feature> to Vec<String>, this lets us remove Feature as well.
+          Vec<Feature> to BTreeSet<String>, this lets us remove Feature as
+          well.
         - bind::BindFeature::required is now a bool, thanks to xso’s flag.
         - jingle_rtp::Description::rtcp_mux is now a bool flag too.
         - stream_limits::Limits now extract directly to NonZeroU32.

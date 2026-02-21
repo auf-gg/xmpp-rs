@@ -16,6 +16,7 @@ use crate::{
     },
     tokio_xmpp::{Client as TokioXmppClient, connect::ServerConnector, xmlstream::Timeouts},
 };
+use std::collections::BTreeSet;
 
 pub struct ClientBuilder<'a, C: ServerConnector> {
     jid: BareJid,
@@ -107,15 +108,16 @@ impl<C: ServerConnector> ClientBuilder<'_, C> {
             "en",
             self.config.disco.1.to_string(),
         )];
-        let mut features = vec![String::from(ns::DISCO_INFO)];
+        let mut features = BTreeSet::new();
+        features.insert(String::from(ns::DISCO_INFO));
         #[cfg(feature = "avatars")]
         {
             if self.features.contains(&ClientFeature::Avatars) {
-                features.push(format!("{}+notify", ns::AVATAR_METADATA));
+                features.insert(format!("{}+notify", ns::AVATAR_METADATA));
             }
         }
         if self.features.contains(&ClientFeature::JoinRooms) {
-            features.push(format!("{}+notify", ns::BOOKMARKS2));
+            features.insert(format!("{}+notify", ns::BOOKMARKS2));
         }
         DiscoInfoResult {
             node: None,
