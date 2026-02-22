@@ -130,6 +130,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>"
             .parse()

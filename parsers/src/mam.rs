@@ -300,6 +300,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>"
             .parse()
@@ -350,6 +351,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_serialize_result() {
         let reference: Element = "<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'><forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></result>"
         .parse()

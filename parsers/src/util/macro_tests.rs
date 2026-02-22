@@ -140,10 +140,6 @@ fn empty_unexpected_attribute() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
 fn empty_ignores_xml_lang() {
     #[allow(unused_imports)]
     use core::{
@@ -1651,6 +1647,7 @@ fn element_catch_one_negative_none() {
 }
 
 #[test]
+#[cfg(not(feature = "disable-validation"))]
 fn element_catch_one_negative_more_than_one_child() {
     #[allow(unused_imports)]
     use core::{
@@ -1693,6 +1690,7 @@ fn element_catch_maybe_one_roundtrip_some() {
 }
 
 #[test]
+#[cfg(not(feature = "disable-validation"))]
 fn element_catch_maybe_one_negative_more_than_one_child() {
     #[allow(unused_imports)]
     use core::{

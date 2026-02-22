@@ -485,6 +485,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "disable-validation"))]
     fn test_wrong_child() {
         let elem: Element = "<x xmlns='jabber:x:data' type='cancel'><coucou/></x>"
             .parse()

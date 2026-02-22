@@ -47,6 +47,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_simple() {
         let elem: Element =
             "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client'/></forwarded>"
@@ -56,6 +57,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client'/><coucou/></forwarded>"
@@ -70,6 +72,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_serialise() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' type='chat'/></forwarded>".parse().unwrap();
         let forwarded = Forwarded {
@@ -81,6 +84,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_serialize_with_delay_and_stanza() {
         let reference: Element = "<forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
         .parse()
@@ -123,6 +127,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_invalid_duplicate_message() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
             .parse()

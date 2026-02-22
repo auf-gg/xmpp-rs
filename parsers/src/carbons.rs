@@ -58,6 +58,7 @@ impl MessagePayload for Sent {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(feature = "component"))]
     use jid::Jid;
     use minidom::Element;
 
@@ -94,6 +95,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn forwarded_elements() {
         let elem: Element = "<received xmlns='urn:xmpp:carbons:2'>
   <forwarded xmlns='urn:xmpp:forward:0'>
@@ -135,6 +137,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_serialize_received() {
         let reference: Element = "<received xmlns='urn:xmpp:carbons:2'><forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></received>"
         .parse()
@@ -154,6 +157,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
     fn test_serialize_sent() {
         let reference: Element = "<sent xmlns='urn:xmpp:carbons:2'><forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></sent>"
         .parse()
