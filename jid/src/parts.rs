@@ -9,8 +9,8 @@ use core::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{domain_check, node_check, resource_check};
 use crate::{BareJid, Error, Jid};
+use crate::{domain_check, node_check, resource_check};
 
 macro_rules! def_part_parse_doc {
     ($name:ident, $other:ident, $more:expr) => {

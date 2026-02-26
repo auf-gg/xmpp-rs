@@ -57,12 +57,12 @@ use idna::uts46::{AsciiDenyList, DnsLength, Hyphens, Uts46};
 use stringprep::{nameprep, nodeprep, resourceprep};
 
 #[cfg(feature = "serde")]
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
 #[cfg(feature = "quote")]
 use proc_macro2::TokenStream;
 #[cfg(feature = "quote")]
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 
 #[cfg(feature = "minidom")]
 use minidom::{IntoAttributeValue, Node};
