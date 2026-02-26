@@ -1,4 +1,4 @@
-Version NEXT:
+Version 0.12.2, release 2025-02-26:
   * Changes:
     - Add a `NodeRef::unescape()` method, to implement XEP-0106 escaping.
 
