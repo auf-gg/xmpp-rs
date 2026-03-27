@@ -1,5 +1,10 @@
 Version NEXT:
 0000-00-00 RELEASER <releaser@domain>
+    * Breaking:
+      - Removed the `disable-validation` feature and made the behaviour the
+        new default. The newly-introduced `pedantic` feature can be used to
+        opt into the previous default behaviour of rejecting all unknown
+        child elements and attributes.
     * Added:
       - Expose `client_auth` method to allow manual stream setups for advanced
         use cases.

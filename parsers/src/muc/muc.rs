@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_muc_invalid_child() {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'><coucou/></x>"
             .parse()
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(elem, elem2);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_muc_invalid_attribute() {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc' coucou=''/>"

@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(message, "This is not a Payload element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event' coucou=''/>"

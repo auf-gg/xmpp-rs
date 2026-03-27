@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     #[cfg(not(feature = "component"))] // feature = "component" changes <message/> namespace
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client'/><coucou/></forwarded>"
             .parse()

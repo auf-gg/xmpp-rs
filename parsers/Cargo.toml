@@ -32,8 +32,8 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 [features]
 # Build xmpp-parsers to make components instead of clients.
 component = []
-# Disable validation of unknown attributes.
-disable-validation = [ "xso/non-pedantic" ]
+# Raise errors on unexpected children and attributes.
+pedantic = [ "xso/pedantic" ]
 # Enable serde support in jid crate
 serde = [ "jid/serde" ]
 # Enable some additional logging in helpers

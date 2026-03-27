@@ -1,4 +1,8 @@
 Version NEXT:
+    * Breaking
+      - Removed the `non-pedantic` feature and made the behaviour the default.
+      - Added the `pedantic` feature, opting into the previous default
+        behaviour of rejecting unknown attributes and children.
     * Changes
       - Fix some Clippy warnings
       - Fix build with minidom and without std (!661)

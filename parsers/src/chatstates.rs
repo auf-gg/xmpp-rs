@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(message, "This is not a ChatState element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>"
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(message, "Unknown child in ChatState::Gone element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>"

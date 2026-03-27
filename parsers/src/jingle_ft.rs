@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_received_unknown_child() {
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><coucou/></received>".parse().unwrap();
         let error = Received::try_from(elem).unwrap_err();
@@ -358,7 +358,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_received() {
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
@@ -401,7 +401,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_checksum_unknown_child() {
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file><coucou/></checksum>".parse().unwrap();
         let error = Checksum::try_from(elem).unwrap_err();
@@ -440,7 +440,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_checksum() {
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
@@ -481,7 +481,7 @@ mod tests {
         assert_eq!(range2.hashes, hashes);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_range() {
         let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>"

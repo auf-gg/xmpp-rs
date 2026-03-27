@@ -264,7 +264,7 @@ mod tests {
         assert_eq!(roster.items[0].subscription, Subscription::Remove);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid() {
         let elem: Element = "<query xmlns='jabber:iq:roster'><coucou/></query>"
@@ -317,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_item_unknown_child() {
         let elem: Element =
             "<query xmlns='jabber:iq:roster'><item jid='coucou'><coucou/></item></query>"

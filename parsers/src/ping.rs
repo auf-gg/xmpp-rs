@@ -22,7 +22,7 @@ impl IqGetPayload for Ping {}
 mod tests {
     use super::*;
     use minidom::Element;
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     #[test]
@@ -43,7 +43,7 @@ mod tests {
         assert_eq!(elem1, elem2);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>"
@@ -57,7 +57,7 @@ mod tests {
         assert_eq!(message, "Unknown child in Ping element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping' coucou=''/>".parse().unwrap();

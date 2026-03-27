@@ -47,7 +47,7 @@ mod tests {
         Replace::try_from(elem).unwrap();
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou' coucou=''/>"
@@ -62,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element =
             "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'><coucou/></replace>"

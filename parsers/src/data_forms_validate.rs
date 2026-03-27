@@ -449,7 +449,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(
-        feature = "disable-validation",
+        not(feature = "pedantic"),
         should_panic = "Validate::try_from(element).is_err()"
     )]
     fn test_fails_with_invalid_children() {

@@ -770,7 +770,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_invalid_child_in_reason() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><decline/><a/></reason></jingle>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();

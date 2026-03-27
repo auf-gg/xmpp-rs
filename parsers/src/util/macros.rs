@@ -318,7 +318,7 @@ macro_rules! check_ns_only {
 
 macro_rules! check_no_children {
     ($elem:ident, $name:tt) => {
-        #[cfg(not(feature = "disable-validation"))]
+        #[cfg(feature = "pedantic")]
         for _ in $elem.children() {
             return Err(xso::error::Error::Other(
                 concat!("Unknown child in ", $name, " element.").into(),
@@ -330,7 +330,7 @@ macro_rules! check_no_children {
 
 macro_rules! check_no_attributes {
     ($elem:ident, $name:tt) => {
-        #[cfg(not(feature = "disable-validation"))]
+        #[cfg(feature = "pedantic")]
         for _ in $elem.attrs() {
             return Err(xso::error::Error::Other(
                 concat!("Unknown attribute in ", $name, " element.").into(),
@@ -342,7 +342,7 @@ macro_rules! check_no_attributes {
 
 macro_rules! check_no_unknown_attributes {
     ($elem:ident, $name:tt, [$($attr:tt),*]) => (
-        #[cfg(not(feature = "disable-validation"))]
+        #[cfg(feature = "pedantic")]
         for ((ns, attr), _) in $elem.attrs() {
             $(
                 if *ns == ::xso::exports::rxml::Namespace::NONE && attr == $attr {

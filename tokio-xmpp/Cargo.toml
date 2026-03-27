@@ -90,7 +90,7 @@ serde = [ "xmpp-parsers/serde" ]
 dns = [ "hickory-resolver", "idna" ]
 component = ["xmpp-parsers/component", "insecure-tcp"]
 
-disable-validation = ["xmpp-parsers/disable-validation"]
+pedantic = ["xmpp-parsers/pedantic"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(xmpprs_doc_build)'] }

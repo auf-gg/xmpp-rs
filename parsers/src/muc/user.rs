@@ -403,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_invalid_child() {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'>
                 <coucou/>
@@ -433,7 +433,7 @@ mod tests {
         assert_eq!(elem, elem2);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user' coucou=''/>"
@@ -468,7 +468,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'code' missing.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_status_invalid_child() {
         let elem: Element = "<status xmlns='http://jabber.org/protocol/muc#user' code='110'>
@@ -579,7 +579,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "disable-validation", should_panic = "Result::unwrap_err")]
+    #[cfg_attr(not(feature = "pedantic"), should_panic = "Result::unwrap_err")]
     fn test_continue_invalid() {
         let elem: Element =
             "<continue xmlns='http://jabber.org/protocol/muc#user'><foobar/></continue>"
@@ -606,7 +606,7 @@ mod tests {
         assert_eq!(elem2, elem3);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_reason_invalid_attribute() {
         let elem: Element = "<reason xmlns='http://jabber.org/protocol/muc#user' foo='bar'/>"
@@ -620,7 +620,7 @@ mod tests {
         assert_eq!(message, "Unknown attribute in Reason element.".to_owned());
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_reason_invalid() {
         let elem: Element = "<reason xmlns='http://jabber.org/protocol/muc#user'>
@@ -636,7 +636,7 @@ mod tests {
         assert_eq!(message, "Unknown child in Reason element.".to_owned());
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_item_invalid_attr() {
         let elem: Element = "<item xmlns='http://jabber.org/protocol/muc#user'

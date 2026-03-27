@@ -62,7 +62,7 @@ pub struct Blocked;
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     use super::*;
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(unblock.items, two_items);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>"
@@ -169,7 +169,7 @@ mod tests {
         assert_eq!(message, "Unknown attribute in Unblock element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_non_empty_blocklist_request() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'><item jid='coucou@coucou'/><item jid='domain'/></blocklist>".parse().unwrap();

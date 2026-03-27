@@ -18,6 +18,10 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
         - bind::BindFeature::required is now a bool, thanks to xso’s flag.
         - jingle_rtp::Description::rtcp_mux is now a bool flag too.
         - stream_limits::Limits now extract directly to NonZeroU32.
+        - Removed the `disable-validation` feature and made the behaviour the
+          new default. That way, unknown child elements and attributes will
+          not be rejected by xmpp-parsers by default anymore. The `pedantic`
+          feature can be used to opt into the previous default behaviour.
     * Improvements:
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)

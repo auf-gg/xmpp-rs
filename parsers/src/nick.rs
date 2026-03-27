@@ -15,7 +15,7 @@ generate_elem_id!(
 mod tests {
     use super::*;
     use minidom::Element;
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     #[cfg(target_pointer_width = "32")]
@@ -48,7 +48,7 @@ mod tests {
         assert_eq!(elem1, elem2);
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid() {
         let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'><coucou/></nick>"
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(message, "Unknown child in Nick element.");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick' coucou=''/>"

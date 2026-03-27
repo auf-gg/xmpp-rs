@@ -72,7 +72,7 @@ impl From<BindResponse> for Jid {
 mod tests {
     use super::*;
     use minidom::Element;
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     #[cfg(target_pointer_width = "32")]
@@ -118,7 +118,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_resource() {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource attr='coucou'>resource</resource></bind>"

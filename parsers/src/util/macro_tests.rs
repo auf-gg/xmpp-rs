@@ -121,10 +121,7 @@ fn empty_namespace_mismatch() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn empty_unexpected_attribute() {
     #[allow(unused_imports)]
     use core::{
@@ -153,10 +150,7 @@ fn empty_ignores_xml_lang() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn empty_unexpected_child() {
     #[allow(unused_imports)]
     use core::{
@@ -944,10 +938,7 @@ fn text_extract_negative_absent_child() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn text_extract_negative_unexpected_attribute_in_child() {
     #[allow(unused_imports)]
     use core::{
@@ -961,10 +952,7 @@ fn text_extract_negative_unexpected_attribute_in_child() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn text_extract_negative_unexpected_child_in_child() {
     #[allow(unused_imports)]
     use core::{
@@ -1647,7 +1635,7 @@ fn element_catch_one_negative_none() {
 }
 
 #[test]
-#[cfg(not(feature = "disable-validation"))]
+#[cfg(feature = "pedantic")]
 fn element_catch_one_negative_more_than_one_child() {
     #[allow(unused_imports)]
     use core::{
@@ -1690,7 +1678,7 @@ fn element_catch_maybe_one_roundtrip_some() {
 }
 
 #[test]
-#[cfg(not(feature = "disable-validation"))]
+#[cfg(feature = "pedantic")]
 fn element_catch_maybe_one_negative_more_than_one_child() {
     #[allow(unused_imports)]
     use core::{
@@ -2073,10 +2061,7 @@ fn ignore_unknown_attributes_positive() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn ignore_unknown_attributes_negative_unexpected_child() {
     #[allow(unused_imports)]
     use core::{
@@ -2119,10 +2104,7 @@ fn ignore_unknown_children_positive() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn ignore_unknown_children_negative_unexpected_attribute() {
     #[allow(unused_imports)]
     use core::{
@@ -2265,10 +2247,7 @@ fn discard_attribute_absent_roundtrip() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "disable-validation",
-    should_panic = "unexpected result: Ok("
-)]
+#[cfg_attr(not(feature = "pedantic"), should_panic = "unexpected result: Ok(")]
 fn discard_attribute_fails_on_other_unexpected_attributes() {
     #[allow(unused_imports)]
     use core::{

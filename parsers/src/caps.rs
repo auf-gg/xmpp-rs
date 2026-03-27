@@ -197,7 +197,7 @@ mod tests {
     use super::*;
     use crate::caps;
     use minidom::Element;
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     #[cfg(target_pointer_width = "32")]
@@ -226,7 +226,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<c xmlns='http://jabber.org/protocol/caps' node='coucou' hash='sha-256' ver='K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4='><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash></c>".parse().unwrap();

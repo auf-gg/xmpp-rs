@@ -533,7 +533,7 @@ mod tests {
         assert!(payload.is("test", "invalid"));
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_status_child() {
         #[cfg(not(feature = "component"))]
@@ -556,7 +556,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid_attribute() {
         #[cfg(not(feature = "component"))]

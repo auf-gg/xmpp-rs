@@ -69,7 +69,7 @@ mod tests {
     use super::*;
     use crate::hashes::Algo;
     use minidom::Element;
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     use xso::error::{Error, FromElementError};
 
     #[cfg(target_pointer_width = "32")]
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(data.data, b"\0\0\0");
     }
 
-    #[cfg(not(feature = "disable-validation"))]
+    #[cfg(feature = "pedantic")]
     #[test]
     fn test_invalid() {
         let elem: Element = "<data xmlns='urn:xmpp:avatar:data' id='coucou'/>"
