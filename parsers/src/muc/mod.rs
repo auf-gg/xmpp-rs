@@ -11,5 +11,8 @@ pub mod muc;
 /// The `http://jabber.org/protocol/muc#user` protocol.
 pub mod user;
 
+/// The `urn:xmpp:muc:affiliations:1` protocol.
+pub mod mav;
+
 pub use self::muc::Muc;
 pub use self::user::MucUser;

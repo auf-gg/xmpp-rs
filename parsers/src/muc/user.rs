@@ -8,6 +8,7 @@
 use xso::{AsXml, FromXml};
 
 use crate::message::MessagePayload;
+use crate::muc::mav::AffiliationsVersioning;
 use crate::ns;
 use crate::presence::PresencePayload;
 
@@ -302,6 +303,10 @@ pub struct MucUser {
     /// A mediated invite rejection
     #[xml(child(default))]
     pub decline: Option<Decline>,
+
+    /// From XEP-0463: MUC Affiliations Versioning
+    #[xml(child(default))]
+    pub affiliations: Option<AffiliationsVersioning>,
 }
 
 impl MucUser {
@@ -347,7 +352,7 @@ mod tests {
         assert_size!(Item, 84);
         assert_size!(Invite, 44);
         assert_size!(Decline, 44);
-        assert_size!(MucUser, 112);
+        assert_size!(MucUser, 136);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -362,7 +367,7 @@ mod tests {
         assert_size!(Item, 168);
         assert_size!(Invite, 88);
         assert_size!(Decline, 88);
-        assert_size!(MucUser, 224);
+        assert_size!(MucUser, 272);
     }
 
     #[test]

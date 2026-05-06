@@ -1,6 +1,7 @@
 Version NEXT:
 XXXX-YY-ZZ RELEASER <admin@example.com>
     * New parsers/serialisers:
+        - MUC Affiliations Versioning (XEP-0463) (!668)
         - Client Access Management (XEP-0494) (!641)
         - Jingle Content Category (XEP-0507)
         - Displayed markers (XEP-0333) (!669)
