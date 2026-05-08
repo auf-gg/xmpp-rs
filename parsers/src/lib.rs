@@ -245,6 +245,9 @@ pub mod jingle_dtls_srtp;
 /// XEP-0328: JID Prep
 pub mod jid_prep;
 
+/// XEP-0333: Displayed markers
+pub mod displayed_markers;
+
 /// XEP-0335: JSON Containers
 pub mod json_containers;
 

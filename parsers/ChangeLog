@@ -3,6 +3,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
     * New parsers/serialisers:
         - Client Access Management (XEP-0494) (!641)
         - Jingle Content Category (XEP-0507)
+        - Displayed markers (XEP-0333) (!669)
     * Breaking
         - The type of jingle_rtp::Description::ssrc has been changed from
           Option<String> to Option<u32>, in accordance with XEP-0167 version

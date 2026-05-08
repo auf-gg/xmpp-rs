@@ -232,6 +232,9 @@ pub const JINGLE_DTLS: &str = "urn:xmpp:jingle:apps:dtls:0";
 /// XEP-0328: JID Prep
 pub const JID_PREP: &str = "urn:xmpp:jidprep:0";
 
+/// XEP-0333: Displayed markers
+pub const DISPLAYED_MARKERS: &str = "urn:xmpp:chat-markers:0";
+
 /// XEP-0335: JSON Containers
 pub const JSON_CONTAINERS: &str = "urn:xmpp:json:0";
 
