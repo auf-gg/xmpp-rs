@@ -16,6 +16,8 @@ Version NEXT:
         tokio-xmpp's `IqResponseTracker`.
       - Actually count inbound stream management stanzas (!657) instead of
         always sending h='0' in our `<a/>`.
+    * Changed:
+      - Update hickory-dns to 0.26 (!671)
 
 Version 5.0.0:
 2025-10-28 pep <pep@bouah.net>

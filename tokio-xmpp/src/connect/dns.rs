@@ -2,7 +2,9 @@ use core::{fmt, net::SocketAddr};
 #[cfg(feature = "dns")]
 use futures::{future::select_ok, FutureExt};
 #[cfg(feature = "dns")]
-use hickory_resolver::{config::LookupIpStrategy, IntoName, TokioResolver};
+use hickory_resolver::{
+    config::LookupIpStrategy, proto::rr::IntoName, proto::rr::RData, TokioResolver,
+};
 #[cfg(feature = "dns")]
 use log::debug;
 use tokio::net::TcpStream;
@@ -131,7 +133,7 @@ impl DnsConfig {
         let (_config, options) = hickory_resolver::system_conf::read_system_conf()?;
         let resolver = TokioResolver::builder_tokio()?
             .with_options(options)
-            .build();
+            .build()?;
 
         let srv_domain = format!("{}.{}.", srv, ascii_domain).into_name()?;
         let srv_records = resolver.srv_lookup(srv_domain.clone()).await.ok();
@@ -139,10 +141,13 @@ impl DnsConfig {
         match srv_records {
             Some(lookup) => {
                 // TODO: sort lookup records by priority/weight
-                for srv in lookup.iter() {
+                for record in lookup.answers().iter() {
+                    let RData::SRV(ref srv) = record.data else {
+                        continue;
+                    };
+
                     debug!("Attempting connection to {srv_domain} {srv}");
-                    if let Ok(stream) =
-                        Self::resolve_no_srv(&srv.target().to_ascii(), srv.port()).await
+                    if let Ok(stream) = Self::resolve_no_srv(&srv.target.to_ascii(), srv.port).await
                     {
                         return Ok(stream);
                     }
@@ -169,14 +174,14 @@ impl DnsConfig {
         options.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         let resolver = TokioResolver::builder_tokio()?
             .with_options(options)
-            .build();
+            .build()?;
 
         let ips = resolver.lookup_ip(ascii_domain).await?;
 
         // Happy Eyeballs: connect to all records in parallel, return the
         // first to succeed
         select_ok(
-            ips.into_iter()
+            ips.iter()
                 .map(|ip| TcpStream::connect(SocketAddr::new(ip, port)).boxed()),
         )
         .await
