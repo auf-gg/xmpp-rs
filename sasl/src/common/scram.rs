@@ -2,7 +2,7 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt;
-use hmac::{digest::InvalidLength, Hmac, Mac};
+use hmac::{digest::InvalidLength, Hmac, KeyInit, Mac};
 use pbkdf2::pbkdf2;
 use sha1::{Digest, Sha1 as Sha1_hash};
 use sha2::Sha256 as Sha256_hash;

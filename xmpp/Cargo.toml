@@ -18,7 +18,7 @@ chrono = "0.4"
 futures = "0.3"
 tokio = { version = "1", features = ["fs", "signal"] }
 log = "0.4"
-reqwest = { version = "0.12", features = ["stream"], default-features = false }
+reqwest = { version = "0.13", features = ["stream"], default-features = false }
 tokio-util = { version = "0.7", features = ["codec"] }
 # same repository dependencies
 tokio-xmpp = { version = "5.0", path = "../tokio-xmpp", default-features = false }
@@ -33,10 +33,10 @@ required-features = ["avatars"]
 [features]
 default = ["avatars", "aws_lc_rs", "starttls", "rustls-native-certs"]
 
-aws_lc_rs = ["rustls-any-backend", "tokio-xmpp/aws_lc_rs", "reqwest/rustls-tls-no-provider"]
-ring = ["rustls-any-backend", "tokio-xmpp/ring", "reqwest/rustls-tls-no-provider"]
+aws_lc_rs = ["rustls-any-backend", "tokio-xmpp/aws_lc_rs", "reqwest/rustls-no-provider"]
+ring = ["rustls-any-backend", "tokio-xmpp/ring", "reqwest/rustls-no-provider"]
 native-tls = ["tokio-xmpp/native-tls", "reqwest/native-tls"]
-ktls = ["rustls-any-backend", "tokio-xmpp/ktls", "reqwest/rustls-tls"]
+ktls = ["rustls-any-backend", "tokio-xmpp/ktls", "reqwest/rustls"]
 
 rustls-any-backend = ["tokio-xmpp/rustls-any-backend"]
 

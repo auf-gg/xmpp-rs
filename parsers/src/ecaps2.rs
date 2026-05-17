@@ -12,8 +12,11 @@ use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
 use base64::{engine::general_purpose::STANDARD as Base64, Engine};
-use blake2::Blake2bVar;
-use digest::{Digest, Update, VariableOutput};
+use blake2::{
+    digest::{Update, VariableOutput},
+    Blake2bVar,
+};
+use digest::Digest;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
 use xso::error::Error;
