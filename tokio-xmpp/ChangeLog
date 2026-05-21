@@ -12,6 +12,8 @@ Version NEXT:
       - Expose `client_auth` method to allow manual stream setups for advanced
         use cases.
       - Add feature flag to disable validation in xmpp_parsers
+      - Added option to set custom DNS resolver to
+        `tokio_xmpp::connect::DnsConfig`
     * Fixed:
       - Ignore missing "version" stream attribute for 0114 components.
       - Gate `AsRawFd` behind `ktls` feature to make Windows build work again.

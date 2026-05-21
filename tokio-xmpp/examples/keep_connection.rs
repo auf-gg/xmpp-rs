@@ -66,6 +66,7 @@ async fn main() {
             host: jid.domain().as_str().to_owned(),
             srv: "_xmpp-client._tcp".to_owned(),
             fallback_port: 5222,
+            resolver: None,
         }),
         jid.clone().into(),
         password.clone(),
