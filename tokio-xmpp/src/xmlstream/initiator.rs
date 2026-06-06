@@ -18,7 +18,7 @@ use xmpp_parsers::{
     stream_features::StreamFeatures,
 };
 
-use xso::{AsXml, FromXml};
+use xso::FromXml;
 
 use super::{
     common::{RawXmlStream, ReadXso, ReadXsoError, StreamHeader},
@@ -127,7 +127,7 @@ impl<Io: AsyncBufRead + AsyncWrite + Unpin> PendingFeaturesRecv<Io> {
     /// If the peer sends any payload which is neither stream features nor
     /// a stream error, an [`io::Error`][`std::io::Error`] with
     /// [`InvalidData`][`io::ErrorKind::InvalidData`] kind is returned.
-    pub async fn recv_features<T: FromXml + AsXml>(
+    pub async fn recv_features<T: FromXml>(
         self,
     ) -> Result<(StreamFeatures, XmlStream<Io, T>), RecvFeaturesError> {
         let Self {
@@ -170,7 +170,7 @@ impl<Io: AsyncBufRead + AsyncWrite + Unpin> PendingFeaturesRecv<Io> {
     /// down the road (because the feature stream element cannot be handled).
     /// The only place where this is useful is in
     /// [XEP-0114](https://xmpp.org/extensions/xep-0114.html) connections.
-    pub fn skip_features<T: FromXml + AsXml>(self) -> XmlStream<Io, T> {
+    pub fn skip_features<T: FromXml>(self) -> XmlStream<Io, T> {
         XmlStream::wrap(self.stream)
     }
 }

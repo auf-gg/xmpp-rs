@@ -259,7 +259,7 @@ impl<Io, T: FromXml> XmlStream<Io, T> {
     }
 }
 
-impl<Io: AsyncBufRead, T: FromXml + AsXml> XmlStream<Io, T> {
+impl<Io: AsyncBufRead, T: FromXml> XmlStream<Io, T> {
     fn wrap(inner: RawXmlStream<Io>) -> Self {
         Self {
             inner,
@@ -281,7 +281,7 @@ impl<Io: AsyncBufRead, T: FromXml + AsXml> XmlStream<Io, T> {
     }
 }
 
-impl<Io: AsyncBufRead + AsyncWrite + Unpin, T: FromXml + AsXml + fmt::Debug> XmlStream<Io, T> {
+impl<Io: AsyncBufRead + AsyncWrite + Unpin, T: FromXml + fmt::Debug> XmlStream<Io, T> {
     /// Initiate a stream reset
     ///
     /// To actually send the stream header, call
@@ -329,7 +329,7 @@ impl<Io: AsyncBufRead + AsyncWrite + Unpin, T: FromXml + AsXml + fmt::Debug> Xml
     ///
     /// In addition, attempting to reset a stream which has been closed by
     /// either side or which has had an I/O error will also cause a panic.
-    pub async fn accept_reset(mut self, barrier: &T) -> io::Result<AcceptedStream<Io>> {
+    pub async fn accept_reset<U: AsXml>(mut self, barrier: &U) -> io::Result<AcceptedStream<Io>> {
         self.assert_retypable();
         self.send(barrier).await?;
 
@@ -361,7 +361,7 @@ impl<Io: AsyncBufRead + AsyncWrite + Unpin, T: FromXml + AsXml + fmt::Debug> Xml
     }
 }
 
-impl<Io: AsyncBufRead, T: FromXml + AsXml + fmt::Debug> Stream for XmlStream<Io, T> {
+impl<Io: AsyncBufRead, T: FromXml + fmt::Debug> Stream for XmlStream<Io, T> {
     type Item = Result<T, ReadError>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -401,7 +401,7 @@ impl<Io: AsyncBufRead, T: FromXml + AsXml + fmt::Debug> Stream for XmlStream<Io,
     }
 }
 
-impl<Io: AsyncWrite, T: FromXml + AsXml> XmlStream<Io, T> {
+impl<Io: AsyncWrite, T: FromXml> XmlStream<Io, T> {
     /// Initiate stream shutdown and poll for completion.
     ///
     /// Please see [`Self::shutdown`] for details.
@@ -443,7 +443,7 @@ impl<Io: AsyncWrite, T: FromXml + AsXml> XmlStream<Io, T> {
     }
 }
 
-impl<Io: AsyncWrite + Unpin, T: FromXml + AsXml> XmlStream<Io, T> {
+impl<Io: AsyncWrite + Unpin, T: FromXml> XmlStream<Io, T> {
     /// Send the stream footer and close the sender side of the underlying
     /// transport.
     ///
@@ -459,7 +459,7 @@ impl<Io: AsyncWrite + Unpin, T: FromXml + AsXml> XmlStream<Io, T> {
     }
 }
 
-impl<'x, Io: AsyncWrite, T: FromXml + AsXml, U: AsXml> Sink<&'x U> for XmlStream<Io, T> {
+impl<'x, Io: AsyncWrite, T: FromXml, U: AsXml> Sink<&'x U> for XmlStream<Io, T> {
     type Error = io::Error;
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -489,11 +489,11 @@ impl<'x, Io: AsyncWrite, T: FromXml + AsXml, U: AsXml> Sink<&'x U> for XmlStream
 
 /// Future implementing [`XmlStream::shutdown`] using
 /// [`XmlStream::poll_shutdown`].
-pub struct Shutdown<'a, Io: AsyncWrite, T: FromXml + AsXml> {
+pub struct Shutdown<'a, Io: AsyncWrite, T: FromXml> {
     stream: Pin<&'a mut XmlStream<Io, T>>,
 }
 
-impl<Io: AsyncWrite, T: FromXml + AsXml> Future for Shutdown<'_, Io, T> {
+impl<Io: AsyncWrite, T: FromXml> Future for Shutdown<'_, Io, T> {
     type Output = io::Result<()>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {

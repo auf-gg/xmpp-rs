@@ -25,6 +25,7 @@ Version NEXT:
       - Update hickory-dns to 0.26 (!671)
       - Drive the XMPP client stream in the background (!631)
       - Add option to split XMPP client into read and write half (!631)
+      - Remove T: AsXml bound from XmlStream (!675)
 
 Version 5.0.0:
 2025-10-28 pep <pep@bouah.net>

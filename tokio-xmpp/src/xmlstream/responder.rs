@@ -14,7 +14,7 @@ use tokio::io::{AsyncBufRead, AsyncWrite};
 
 use xmpp_parsers::{stream_error::StreamError, stream_features::StreamFeatures};
 
-use xso::{AsXml, FromXml};
+use xso::FromXml;
 
 use super::{
     common::{RawXmlStream, StreamHeader},
@@ -78,7 +78,7 @@ impl<Io: AsyncBufRead + AsyncWrite + Unpin> PendingFeaturesSend<Io> {
     /// After the stream features have been sent, the stream can be used for
     /// exchanging stream-level elements (stanzas or "nonzas"). The Rust type
     /// for these elements must be given as type parameter `T`.
-    pub async fn send_features<T: FromXml + AsXml>(
+    pub async fn send_features<T: FromXml>(
         self,
         features: &'_ StreamFeatures,
     ) -> io::Result<XmlStream<Io, T>> {
