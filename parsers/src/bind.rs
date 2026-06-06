@@ -16,7 +16,7 @@ use jid::{FullJid, Jid};
 pub struct BindFeature {
     /// Present if bind is required.
     #[xml(flag)]
-    required: bool,
+    pub required: bool,
 }
 
 /// The request for resource binding, which is the process by which a client
@@ -31,7 +31,7 @@ pub struct BindQuery {
     /// If this is None, we request no particular resource, and a random one
     /// will be affected by the server.
     #[xml(extract(default, fields(text(type_ = String))))]
-    resource: Option<String>,
+    pub resource: Option<String>,
 }
 
 impl BindQuery {
@@ -51,7 +51,7 @@ impl IqSetPayload for BindQuery {}
 pub struct BindResponse {
     /// The full JID returned by the server for this client.
     #[xml(extract(fields(text(type_ = FullJid))))]
-    jid: FullJid,
+    pub jid: FullJid,
 }
 
 impl IqResultPayload for BindResponse {}

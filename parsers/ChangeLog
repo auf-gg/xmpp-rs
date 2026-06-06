@@ -30,6 +30,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
           easily construct it (!660)
         - jingle_rtp::Description gained a bandwidth child.
         - Fix cargo test for the disable-validation and component features.
+        - Structs of the bind module now have accessible inner pieces (!675).
 
 Version 0.22.0:
 2025-10-28 pep <pep@bouah.net>
