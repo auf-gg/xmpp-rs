@@ -19,7 +19,7 @@ use xmpp_parsers::{
     stream_features::StreamFeatures,
 };
 
-use crate::xmlstream::{ReadError, XmppStreamElement};
+use crate::xmlstream::{FallibleStreamElement, ReadError, StreamElementError, XmppStreamElement};
 use crate::Stanza;
 
 use super::negotiation::{NegotiationResult, NegotiationState};
@@ -542,14 +542,14 @@ impl ConnectedState {
                 });
                 match item {
                     // Easy case, we got some data.
-                    Ok(XmppStreamElement::Stanza(data)) => {
+                    Ok(FallibleStreamElement::Ok(XmppStreamElement::Stanza(data))) => {
                         if let Some(sm_state) = sm_state.as_mut() {
                             sm_state.received();
                         }
                         Poll::Ready(Some(ConnectedEvent::Worker(WorkerEvent::Stanza(data))))
                     }
 
-                    Ok(XmppStreamElement::SM(sm::Nonza::Ack(ack))) => {
+                    Ok(FallibleStreamElement::Ok(XmppStreamElement::SM(sm::Nonza::Ack(ack)))) => {
                         if let Some(sm_state) = sm_state {
                             match sm_state.remote_acked(ack.h) {
                                 Ok(()) => Poll::Ready(None),
@@ -567,7 +567,7 @@ impl ConnectedState {
                         }
                     }
 
-                    Ok(XmppStreamElement::SM(sm::Nonza::Req(_))) => {
+                    Ok(FallibleStreamElement::Ok(XmppStreamElement::SM(sm::Nonza::Req(_)))) => {
                         if let Some(sm_state) = sm_state {
                             match sm_state.pending_acks.checked_add(1) {
                                 None => panic!("Too many pending ACKs, something is wrong."),
@@ -588,7 +588,7 @@ impl ConnectedState {
                         Poll::Ready(None)
                     }
 
-                    Ok(other) => {
+                    Ok(FallibleStreamElement::Ok(other)) => {
                         log::warn!(
                             "Received unsupported stream element: {other:?}. Emitting stream error.",
                         );
@@ -602,6 +602,16 @@ impl ConnectedState {
                         Poll::Ready(None)
                     }
 
+                    Ok(FallibleStreamElement::Err(
+                        e @ StreamElementError::InvalidStanza { .. },
+                    )) => {
+                        log::warn!("Received invalid stanza: {e}; discarding silently.");
+                        if let Some(sm_state) = sm_state.as_mut() {
+                            sm_state.received();
+                        }
+                        Poll::Ready(None)
+                    }
+
                     // Another easy case: Soft timeouts are passed through
                     // to the caller for handling.
                     Err(ReadError::SoftTimeout) => {
@@ -610,9 +620,11 @@ impl ConnectedState {
 
                     // Parse errors are also just passed through (and will
                     // likely cause us to send a stream error).
-                    Err(ReadError::ParseError(e)) => {
-                        Poll::Ready(Some(ConnectedEvent::Worker(WorkerEvent::ParseError(e))))
-                    }
+                    Err(ReadError::ParseError(e))
+                    | Ok(FallibleStreamElement::Err(StreamElementError::InvalidNonza {
+                        error: e,
+                        ..
+                    })) => Poll::Ready(Some(ConnectedEvent::Worker(WorkerEvent::ParseError(e)))),
 
                     // I/O errors cause the stream to be considerde
                     // broken; we drop it and send a Disconnect event with

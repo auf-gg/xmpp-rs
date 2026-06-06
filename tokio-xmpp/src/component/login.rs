@@ -43,7 +43,11 @@ pub async fn auth<S: AsyncBufRead + AsyncWrite + Unpin>(
         .await?;
 
     loop {
-        match stream.next().await {
+        match stream
+            .next()
+            .await
+            .map(|v| v.map(|v| v.into_read_error()).flatten())
+        {
             Some(Ok(XmppStreamElement::ComponentHandshake(_))) => {
                 return Ok(());
             }

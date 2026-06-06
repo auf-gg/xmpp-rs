@@ -101,7 +101,11 @@ pub async fn starttls<S: TlsAsyncStream>(
         .await?;
 
     loop {
-        match stream.next().await {
+        match stream
+            .next()
+            .await
+            .map(|v| v.map(|v| v.into_read_error()).flatten())
+        {
             Some(Ok(XmppStreamElement::Starttls(starttls::Nonza::Proceed(_)))) => {
                 break;
             }

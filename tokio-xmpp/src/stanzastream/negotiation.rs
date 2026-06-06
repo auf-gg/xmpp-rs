@@ -197,6 +197,7 @@ impl NegotiationState {
                         "eof before stream footer",
                     )))
                 });
+                let item = item.map(|v| v.into_read_error()).flatten();
 
                 match item {
                     Ok(XmppStreamElement::Stanza(data)) => match data {
@@ -387,6 +388,8 @@ impl NegotiationState {
                         "eof before stream footer",
                     )))
                 });
+                let item = item.map(|v| v.into_read_error()).flatten();
+
                 match item {
                     // Pre-SM data. Note that we mustn't count this while we
                     // are still in negotiating state: we transit to

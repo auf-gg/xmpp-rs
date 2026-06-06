@@ -26,7 +26,7 @@ use xmpp_parsers::{
 };
 
 use crate::connect::AsyncReadAndWrite;
-use crate::xmlstream::{ReadError, XmppStreamElement};
+use crate::xmlstream::{FallibleStreamElement, ReadError};
 use crate::Stanza;
 
 use super::connected::{ConnectedEvent, ConnectedState};
@@ -38,7 +38,7 @@ use super::{Event, StreamEvent};
 /// Convenience alias for [`XmlStreams`][`crate::xmlstream::XmlStream`] which
 /// may be used with [`StanzaStream`][`super::StanzaStream`].
 pub type XmppStream =
-    crate::xmlstream::XmlStream<Box<dyn AsyncReadAndWrite + Send + 'static>, XmppStreamElement>;
+    crate::xmlstream::XmlStream<Box<dyn AsyncReadAndWrite + Send + 'static>, FallibleStreamElement>;
 
 /// Underlying connection for a [`StanzaStream`][`super::StanzaStream`].
 pub struct Connection {

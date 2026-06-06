@@ -7,13 +7,15 @@ use xmpp_parsers::{
     bind::{BindFeature, BindQuery, BindResponse},
     iq::Iq,
     message::Message,
+    presence::{Presence, Show, Type as PresenceType},
     sm,
 };
 
 use crate::jid::{BareJid, ResourcePart};
+use crate::minidom::Element;
 use crate::xmlstream::{
-    accept_stream, initiate_stream, ReadError, RecvFeaturesError, StreamHeader, Timeouts,
-    XmppStreamElement,
+    accept_stream, initiate_stream, FallibleStreamElement, ReadError, RecvFeaturesError,
+    StreamHeader, Timeouts, XmppStreamElement,
 };
 
 use super::*;
@@ -47,6 +49,12 @@ fn map_io<T>(v: Option<Result<T, ReadError>>) -> Result<T, io::Error> {
             )),
         },
     }
+}
+
+fn map_err(
+    opt: Option<Result<FallibleStreamElement, ReadError>>,
+) -> Option<Result<XmppStreamElement, ReadError>> {
+    opt.map(|res| res.map(|v| v.into_read_error()).flatten())
 }
 
 async fn custom_stream_pair(
@@ -117,7 +125,7 @@ async fn custom_stream_pair(
         16,
     );
 
-    match map_io(server.next().await)? {
+    match map_io(map_err(server.next().await))? {
         XmppStreamElement::Stanza(stanza) => match stanza {
             Stanza::Iq(Iq::Set {
                 from,
@@ -168,7 +176,7 @@ async fn fresh_sm_pair() -> io::Result<(StanzaStream, XmppStream)> {
     features.stream_management = Some(sm::StreamManagement { optional: false });
     let (mut client, mut server) =
         custom_stream_pair("client@domain.example".parse().unwrap(), features).await?;
-    match map_io(server.next().await)? {
+    match map_io(map_err(server.next().await))? {
         XmppStreamElement::SM(sm) => match sm {
             sm::Nonza::Enable(sm::Enable { max, resume }) => {
                 server
@@ -199,8 +207,92 @@ async fn fresh_sm_pair() -> io::Result<(StanzaStream, XmppStream)> {
 async fn sm_negotiation() {
     let (client, mut server) = fresh_sm_pair().await.expect("stream setup failed");
     client.send(Box::new(Message::new(None).into())).await;
-    match map_io(server.next().await) {
+    match map_io(map_err(server.next().await)) {
         Ok(XmppStreamElement::Stanza(Stanza::Message(Message { .. }))) => (),
         other => panic!("unexpected recv result on server side: {other:?}"),
+    }
+}
+
+#[cfg(not(feature = "component"))]
+#[tokio::test]
+async fn drop_stanza_with_unparsable_payload_nonsm() {
+    let (mut client, mut server) = plain_pair().await.expect("stream setup failed");
+
+    // Here, we construct a deliberately broken <presence/> stanza.
+    let mut presence = Presence::new(PresenceType::None);
+    presence.show = Some(Show::Away);
+    let mut presence: Element = presence.into();
+    for child in presence.children_mut() {
+        if child.is("show", "jabber:client") {
+            child.append_text("-foo");
+        }
+    }
+
+    server
+        .send(&presence)
+        .await
+        .expect("unexpected send result on server side");
+    server
+        .send(&Presence::new(PresenceType::Unavailable))
+        .await
+        .expect("unexpected send result on server side");
+
+    match client.next().await {
+        Some(Event::Stanza(Stanza::Presence(Presence { type_, .. }))) => {
+            assert_eq!(type_, PresenceType::Unavailable);
+        }
+        other => panic!("unexpected recv result on client side: {other:?}"),
+    }
+}
+
+#[cfg(not(feature = "component"))]
+#[tokio::test]
+async fn drop_stanza_with_unparsable_payload_sm() {
+    let (mut client, mut server) = fresh_sm_pair().await.expect("stream setup failed");
+
+    // Here, we construct a deliberately broken <presence/> stanza.
+    let mut presence = Presence::new(PresenceType::None);
+    presence.show = Some(Show::Away);
+    let mut presence: Element = presence.into();
+    for child in presence.children_mut() {
+        if child.is("show", "jabber:client") {
+            child.append_text("-foo");
+        }
+    }
+
+    server
+        .send(&presence)
+        .await
+        .expect("unexpected send result on server side");
+    server
+        .send(&sm::R)
+        .await
+        .expect("unexpected send result on server side");
+    match map_io(map_err(server.next().await)) {
+        Ok(XmppStreamElement::SM(sm::Nonza::Ack(sm::A { h }))) => {
+            assert_eq!(h, 1);
+        }
+        other => panic!("unexpected recv result on the server side: {other:?}"),
+    }
+    server
+        .send(&Presence::new(PresenceType::Unavailable))
+        .await
+        .expect("unexpected send result on server side");
+    server
+        .send(&sm::R)
+        .await
+        .expect("unexpected send result on server side");
+    match map_io(map_err(server.next().await)) {
+        Ok(XmppStreamElement::SM(sm::Nonza::Ack(sm::A { h }))) => {
+            assert_eq!(h, 2);
+        }
+        other => panic!("unexpected recv result on the server side: {other:?}"),
+    }
+
+    match client.next().await {
+        Some(Event::Stanza(Stanza::Presence(Presence { type_, .. }))) => {
+            assert_eq!(type_, PresenceType::Unavailable);
+        }
+        other => panic!("unexpected recv result on client side: {other:?}"),
     }
 }

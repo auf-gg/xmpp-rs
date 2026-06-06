@@ -85,7 +85,9 @@ use self::common::{RawError, RawXmlStream, ReadXsoError, ReadXsoState};
 pub use self::common::{StreamHeader, Timeouts};
 pub use self::initiator::{InitiatingStream, PendingFeaturesRecv, RecvFeaturesError};
 pub use self::responder::{AcceptedStream, PendingFeaturesSend};
-pub use self::xmpp::XmppStreamElement;
+pub use self::xmpp::{
+    FallibleStreamElement, RawStanzaHeader, StreamElementError, XmppStreamElement,
+};
 
 #[cfg(feature = "syntax-highlighting")]
 static PS: LazyLock<syntect::parsing::SyntaxSet> =
@@ -502,4 +504,4 @@ impl<Io: AsyncWrite, T: FromXml> Future for Shutdown<'_, Io, T> {
 }
 
 /// Convenience alias for an XML stream using [`XmppStreamElement`].
-pub type XmppStream<Io> = XmlStream<Io, XmppStreamElement>;
+pub type XmppStream<Io> = XmlStream<Io, FallibleStreamElement>;
