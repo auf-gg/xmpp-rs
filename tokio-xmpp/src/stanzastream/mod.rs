@@ -44,6 +44,8 @@ mod error;
 mod negotiation;
 mod queue;
 mod stream_management;
+#[cfg(test)]
+mod tests;
 mod worker;
 
 use self::queue::QueueEntry;
