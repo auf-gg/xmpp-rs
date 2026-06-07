@@ -288,6 +288,14 @@ impl DomainRef {
     pub fn with_node(&self, node: &NodeRef) -> BareJid {
         BareJid::from_parts(Some(node), self)
     }
+
+    /// Construct a bare JID (a JID without a resource) from this domain and
+    /// the given node (local part), by specifying a stringy `node`.
+    /// If your node has already been parsed into a [`NodePart`], use [`DomainRef::with_node`].
+    pub fn with_node_str(&self, node: &str) -> Result<BareJid, Error> {
+        let node = NodePart::new(node)?;
+        Ok(self.with_node(&node))
+    }
 }
 
 impl From<DomainPart> for BareJid {
