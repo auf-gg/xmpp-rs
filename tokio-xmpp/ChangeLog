@@ -16,6 +16,8 @@ Version NEXT:
         `tokio_xmpp::connect::DnsConfig`
     * Fixed:
       - Ignore missing "version" stream attribute for 0114 components.
+      - Always send the stream:stream opening in one TCP packet, to workaround
+        issue #1995 in Prosody. (!680)
       - Gate `AsRawFd` behind `ktls` feature to make Windows build work again.
       - Implicitly use the `Client`'s bound JID on empty `from` and `to` in
         tokio-xmpp's `IqResponseTracker`.

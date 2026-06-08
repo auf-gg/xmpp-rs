@@ -803,48 +803,38 @@ impl StreamHeader<'_> {
         mut stream: Pin<&mut RawXmlStream<Io>>,
     ) -> io::Result<()> {
         stream
-            .send(Item::XmlDeclaration(rxml::XmlVersion::V1_0))
-            .await?;
-        stream
-            .send(Item::ElementHeadStart(
-                Namespace::from(XML_STREAM_NS),
-                Cow::Borrowed(xml_ncname!("stream")),
-            ))
-            .await?;
+            .as_mut()
+            .start_send(Item::XmlDeclaration(rxml::XmlVersion::V1_0))?;
+        stream.as_mut().start_send(Item::ElementHeadStart(
+            Namespace::from(XML_STREAM_NS),
+            Cow::Borrowed(xml_ncname!("stream")),
+        ))?;
         if let Some(from) = self.from {
-            stream
-                .send(Item::Attribute(
-                    Namespace::NONE,
-                    Cow::Borrowed(xml_ncname!("from")),
-                    from,
-                ))
-                .await?;
+            stream.as_mut().start_send(Item::Attribute(
+                Namespace::NONE,
+                Cow::Borrowed(xml_ncname!("from")),
+                from,
+            ))?;
         }
         if let Some(to) = self.to {
-            stream
-                .send(Item::Attribute(
-                    Namespace::NONE,
-                    Cow::Borrowed(xml_ncname!("to")),
-                    to,
-                ))
-                .await?;
+            stream.as_mut().start_send(Item::Attribute(
+                Namespace::NONE,
+                Cow::Borrowed(xml_ncname!("to")),
+                to,
+            ))?;
         }
         if let Some(id) = self.id {
-            stream
-                .send(Item::Attribute(
-                    Namespace::NONE,
-                    Cow::Borrowed(xml_ncname!("id")),
-                    id,
-                ))
-                .await?;
-        }
-        stream
-            .send(Item::Attribute(
+            stream.as_mut().start_send(Item::Attribute(
                 Namespace::NONE,
-                Cow::Borrowed(xml_ncname!("version")),
-                Cow::Borrowed("1.0"),
-            ))
-            .await?;
+                Cow::Borrowed(xml_ncname!("id")),
+                id,
+            ))?;
+        }
+        stream.as_mut().start_send(Item::Attribute(
+            Namespace::NONE,
+            Cow::Borrowed(xml_ncname!("version")),
+            Cow::Borrowed("1.0"),
+        ))?;
         stream.send(Item::ElementHeadEnd).await?;
         Ok(())
     }
