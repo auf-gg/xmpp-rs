@@ -64,6 +64,8 @@ pub mod presence;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod sasl;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod stanza;
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod stanza_error;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod starttls;

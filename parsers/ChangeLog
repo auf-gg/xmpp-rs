@@ -24,6 +24,8 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
           not be rejected by xmpp-parsers by default anymore. The `pedantic`
           feature can be used to opt into the previous default behaviour.
     * Improvements:
+        - Take the Stanza type from tokio-xmpp, it’s an enum which can wrap
+          Message, Presence and Iq.
         - Make Priority’s inner i8 pub, which had been broken since the
           conversion to xso. (!632)
         - ibr::LegacyQuery now implements Default, allowing users to more
