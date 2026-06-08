@@ -4,14 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use xmpp_parsers::{
-    iq::Iq,
-    jid::Jid,
-    message::{Id, Message},
-    presence::Presence,
-    stream_features::StreamFeatures,
-};
-use xso::{AsXml, FromXml};
+use xmpp_parsers::{jid::Jid, message::Id, stanza::Stanza, stream_features::StreamFeatures};
 
 use crate::xmlstream::XmppStreamElement;
 use crate::Error;
@@ -21,91 +14,18 @@ pub(crate) fn make_id() -> String {
     format!("{}", id)
 }
 
-/// A stanza sent/received over the stream.
-// WARNING: do not add variants to this enum! Adding variants which refer
-// to anything but IQ, Message or Presence stanzas will cause the
-// stream management counters to be off.
-#[derive(FromXml, AsXml, Debug, PartialEq)]
-#[xml()]
-pub enum Stanza {
-    /// IQ stanza
-    #[xml(transparent)]
-    Iq(Iq),
-
-    /// Message stanza
-    #[xml(transparent)]
-    Message(Message),
-
-    /// Presence stanza
-    #[xml(transparent)]
-    Presence(Presence),
-}
-
-impl Stanza {
-    /// Assign a random ID to the stanza, if no ID has been assigned yet.
-    pub fn ensure_id(&mut self) -> &str {
-        match self {
-            Self::Iq(iq) => {
-                let id = iq.id_mut();
-                if id.is_empty() {
-                    *id = make_id();
-                }
-                id
+/// Assign a random ID to the stanza, if no ID has been assigned yet.
+pub fn ensure_stanza_id(stanza: &mut Stanza) -> &str {
+    match stanza {
+        Stanza::Iq(iq) => {
+            let id = iq.id_mut();
+            if id.is_empty() {
+                *id = make_id();
             }
-            Self::Message(message) => message.id.get_or_insert_with(|| Id(make_id())).0.as_ref(),
-            Self::Presence(presence) => presence.id.get_or_insert_with(make_id),
+            id
         }
-    }
-}
-
-impl From<Iq> for Stanza {
-    fn from(other: Iq) -> Self {
-        Self::Iq(other)
-    }
-}
-
-impl From<Presence> for Stanza {
-    fn from(other: Presence) -> Self {
-        Self::Presence(other)
-    }
-}
-
-impl From<Message> for Stanza {
-    fn from(other: Message) -> Self {
-        Self::Message(other)
-    }
-}
-
-impl TryFrom<Stanza> for Message {
-    type Error = Stanza;
-
-    fn try_from(other: Stanza) -> Result<Self, Self::Error> {
-        match other {
-            Stanza::Message(st) => Ok(st),
-            other => Err(other),
-        }
-    }
-}
-
-impl TryFrom<Stanza> for Presence {
-    type Error = Stanza;
-
-    fn try_from(other: Stanza) -> Result<Self, Self::Error> {
-        match other {
-            Stanza::Presence(st) => Ok(st),
-            other => Err(other),
-        }
-    }
-}
-
-impl TryFrom<Stanza> for Iq {
-    type Error = Stanza;
-
-    fn try_from(other: Stanza) -> Result<Self, Stanza> {
-        match other {
-            Stanza::Iq(st) => Ok(st),
-            other => Err(other),
-        }
+        Stanza::Message(message) => message.id.get_or_insert_with(|| Id(make_id())).0.as_ref(),
+        Stanza::Presence(presence) => presence.id.get_or_insert_with(make_id),
     }
 }
 

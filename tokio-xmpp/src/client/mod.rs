@@ -7,7 +7,7 @@
 use crate::client::{receiver::ClientReceiver, sender::ClientSender};
 use crate::connect::ServerConnector;
 use crate::error::Error;
-use crate::event::Event;
+use crate::event::{ensure_stanza_id, Event};
 use crate::stanzastream::{self, StanzaStage, StanzaState, StanzaStream, StanzaToken};
 use crate::xmlstream::Timeouts;
 use crate::Stanza;
@@ -85,7 +85,7 @@ impl Client {
     /// For sending Iq request stanzas, it is recommended to use
     /// [`send_iq`][`Self::send_iq`], which allows awaiting the response.
     pub async fn send_stanza(&mut self, mut stanza: Stanza) -> Result<StanzaToken, io::Error> {
-        stanza.ensure_id();
+        ensure_stanza_id(&mut stanza);
         let mut token = self.stream_tx.send(Box::new(stanza)).await;
 
         match token.wait_for(StanzaStage::Sent).await {

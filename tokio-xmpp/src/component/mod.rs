@@ -8,6 +8,7 @@ use xmpp_parsers::jid::Jid;
 use crate::{
     component::login::component_login,
     connect::ServerConnector,
+    event::ensure_stanza_id,
     xmlstream::{Timeouts, XmppStream},
     Error, Stanza,
 };
@@ -33,7 +34,7 @@ pub struct Component<C: ServerConnector> {
 impl<C: ServerConnector> Component<C> {
     /// Send stanza
     pub async fn send_stanza(&mut self, mut stanza: Stanza) -> Result<(), Error> {
-        stanza.ensure_id();
+        ensure_stanza_id(&mut stanza);
         self.send(stanza).await
     }
 

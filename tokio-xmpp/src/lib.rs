@@ -135,7 +135,10 @@ pub use client::{
 
 #[cfg(feature = "insecure-tcp")]
 pub use component::Component;
-pub use event::{Event, Stanza};
+pub use event::Event;
+
+/// Deprecated reexport of Stanza from xmpp-parsers.
+pub use xmpp_parsers::stanza::Stanza;
 
 #[cfg(test)]
 mod tests {
