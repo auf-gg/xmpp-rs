@@ -6,6 +6,7 @@
 
 use alloc::borrow::Cow;
 use core::{
+    fmt::Write,
     num::ParseIntError,
     ops::{Deref, DerefMut},
     str::FromStr,
@@ -181,11 +182,11 @@ impl Hash {
 
     /// Formats this hash into hexadecimal.
     pub fn to_hex(&self) -> String {
-        self.hash
-            .iter()
-            .map(|byte| format!("{:02x}", byte))
-            .collect::<Vec<_>>()
-            .join("")
+        let mut hex = String::with_capacity(self.hash.len() * 2);
+        for byte in &self.hash {
+            write!(&mut hex, "{:02x}", byte).unwrap();
+        }
+        hex
     }
 
     /// Formats this hash into colon-separated hexadecimal.
