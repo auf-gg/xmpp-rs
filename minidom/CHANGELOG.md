@@ -1,8 +1,10 @@
 Version NEXT:
+
+Version 0.19, released 2026-06-09:
     * Changes
         - Fix some Clippy warnings
     * Fix
-        - Bump rxml version from 0.13.1 to 0.13.3. We needed a feature of .3.
+        - Bump rxml version to 0.14.0.
 
 Version 0.18, released 2025-10-28:
   * Breaking:
