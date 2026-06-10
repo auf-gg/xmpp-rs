@@ -7,7 +7,8 @@ Version NEXT:
         child elements and attributes.
       - Add `xmpp_parsers::stream_features::StreamFeatures` to
       `tokio_xmpp::event::Online` (!631)
-      - `Component.jid` iw now a `BareJid` and not a raw `Jid` (!684)
+      - `Component.jid` is now a `BareJid` and not a raw `Jid` (!684)
+      - `Client.bound_jid` is now a `FullJid` and not a raw `Jid` (!687)
     * Added:
       - Expose `client_auth` method to allow manual stream setups for advanced
         use cases.

@@ -11,7 +11,7 @@ use futures::StreamExt;
 use futures::{task::Poll, Stream};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use xmpp_parsers::{jid::Jid, stream_features::StreamFeatures};
+use xmpp_parsers::{jid::FullJid, stream_features::StreamFeatures};
 
 /// Read half of a [`Client`](crate::Client).
 #[derive(Debug)]
@@ -22,7 +22,7 @@ impl ClientReceiver {
     ///
     /// See the documentation of [`Client::bound_jid`](crate::Client::bound_jid) for more
     /// information.
-    pub async fn bound_jid(&self) -> Option<Jid> {
+    pub async fn bound_jid(&self) -> Option<FullJid> {
         self.0.lock().await.bound_jid.clone()
     }
 

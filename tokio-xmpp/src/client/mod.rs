@@ -15,7 +15,10 @@ use std::io;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot, Mutex};
 use tokio::task::JoinHandle;
-use xmpp_parsers::{jid::Jid, stream_features::StreamFeatures};
+use xmpp_parsers::{
+    jid::{FullJid, Jid},
+    stream_features::StreamFeatures,
+};
 
 #[cfg(feature = "direct-tls")]
 use crate::connect::DirectTlsServerConnector;
@@ -54,7 +57,7 @@ pub struct Client {
     // Client worker task
     worker: JoinHandle<stanzastream::StanzaReceiver>,
     // JID of the logged-in client
-    bound_jid: Option<Jid>,
+    bound_jid: Option<FullJid>,
     // Stream features of the currently connected stream
     features: Option<StreamFeatures>,
     // Response tracker for IQs
@@ -64,7 +67,7 @@ pub struct Client {
 impl Client {
     /// Get the client's bound JID (the one reported by the XMPP
     /// server).
-    pub fn bound_jid(&self) -> Option<&Jid> {
+    pub fn bound_jid(&self) -> Option<&FullJid> {
         self.bound_jid.as_ref()
     }
 

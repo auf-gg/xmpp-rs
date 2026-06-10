@@ -12,7 +12,7 @@ use core::ops::ControlFlow;
 use futures::StreamExt;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
-use xmpp_parsers::jid::Jid;
+use xmpp_parsers::jid::FullJid;
 use xmpp_parsers::stream_features::StreamFeatures;
 
 /// Worker to drive the [`crate::stanzastream`] of a client in the background and continue to
@@ -25,7 +25,7 @@ pub struct ClientWorker {
     // Shutdown signal receiver from frontend
     shutdown_rx: oneshot::Receiver<()>,
     // JID of the logged-in client
-    bound_jid: Option<Jid>,
+    bound_jid: Option<FullJid>,
     // Stream features of the currently connected stream
     features: Option<StreamFeatures>,
     // Response tracker for IQs
@@ -81,7 +81,8 @@ impl ClientWorker {
                 bound_jid,
                 features,
             }) => {
-                self.bound_jid = Some(bound_jid.clone());
+                // This unwrap() will never fail, because the server always uses our own bound JID.
+                self.bound_jid = Some(bound_jid.try_as_full().unwrap().clone());
                 self.features = Some(features.clone());
                 self.iq_response_tracker
                     .set_account_jid(bound_jid.to_bare());
@@ -93,7 +94,7 @@ impl ClientWorker {
                 }
             }
             StanzaStreamEvent::Stream(StreamEvent::Resumed) => Event::Online {
-                bound_jid: self.bound_jid.as_ref().unwrap().clone(),
+                bound_jid: self.bound_jid.as_ref().unwrap().clone().into(),
                 features: self.features.as_ref().unwrap().clone(),
                 resumed: true,
             },

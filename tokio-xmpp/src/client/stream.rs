@@ -36,7 +36,8 @@ impl Stream for Client {
                     ..
                 } = event
                 {
-                    self.bound_jid = Some(bound_jid.clone());
+                    // This unwrap() will never fail because the server MUST send us a full JID.
+                    self.bound_jid = Some(bound_jid.try_as_full().unwrap().clone());
                     self.features = Some(features.clone());
                 }
 
