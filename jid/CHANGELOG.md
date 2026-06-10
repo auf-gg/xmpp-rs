@@ -1,4 +1,6 @@
 Version NEXT, release XXXX-XX-XX:
+
+Version 0.12.3, release 2026-06-11:
   * Changes:
     - Add a `DomainRef::with_node_str()` method, matching `with_resource_str()`
       but for `with_node()`.

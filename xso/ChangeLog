@@ -1,4 +1,6 @@
 Version NEXT:
+
+Version 0.4.0, release 2026-06-10:
     * Breaking
       - Removed the `non-pedantic` feature and made the behaviour the default.
       - Added the `pedantic` feature, opting into the previous default

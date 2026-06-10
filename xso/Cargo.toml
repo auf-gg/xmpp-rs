@@ -1,6 +1,6 @@
 [package]
 name = "xso"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 description = "XML Streamed Objects: similar to serde, but XML-native."
 homepage = "https://xmpp.rs"
@@ -13,7 +13,7 @@ license = "MPL-2.0"
 bytes = { version = "1" }
 rxml = { version = "0.14.0", default-features = false }
 minidom = { version = "0.19", path = "../minidom" }
-xso_proc = { version = "0.2", path = "../xso-proc", optional = true }
+xso_proc = { version = "0.3", path = "../xso-proc", optional = true }
 
 # optional dependencies to provide text conversion to/from types from/using
 # these crates

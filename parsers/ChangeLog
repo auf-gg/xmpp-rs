@@ -1,5 +1,8 @@
 Version NEXT:
-XXXX-YY-ZZ RELEASER <admin@example.com>
+XXXX-YY-ZZ RELEASER <releaser@domain.example>
+
+Version 0.23.0:
+2026-06-11 Jonas Schäfer <jonas@zombofant.net>
     * New parsers/serialisers:
         - MUC Affiliations Versioning (XEP-0463) (!668)
         - Client Access Management (XEP-0494) (!641)
@@ -34,7 +37,7 @@ XXXX-YY-ZZ RELEASER <admin@example.com>
         - jingle_rtp::Description gained a bandwidth child.
         - Fix cargo test for the disable-validation and component features.
         - Structs of the bind module now have accessible inner pieces (!675).
-	- Add 'approved' field to roster item (!683).
+        - Add 'approved' field to roster item (!683).
 
 Version 0.22.0:
 2025-10-28 pep <pep@bouah.net>

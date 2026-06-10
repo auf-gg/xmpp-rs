@@ -1,12 +1,15 @@
 Version NEXT:
-0000-00-00 RELEASER <releaser@domain>
+XXXX-XX-XX RELEASER <releaser@domain.example>
+
+Version 6.0.0:
+2026-06-10 Jonas Schäfer <jonas@zombofant.net>
     * Breaking:
       - Removed the `disable-validation` feature and made the behaviour the
         new default. The newly-introduced `pedantic` feature can be used to
         opt into the previous default behaviour of rejecting all unknown
         child elements and attributes.
       - Add `xmpp_parsers::stream_features::StreamFeatures` to
-      `tokio_xmpp::event::Online` (!631)
+        `tokio_xmpp::event::Online` (!631)
       - `Component.jid` is now a `BareJid` and not a raw `Jid` (!684)
       - `Client.bound_jid` is now a `FullJid` and not a raw `Jid` (!687)
     * Added:
@@ -29,10 +32,9 @@ Version NEXT:
       - Drive the XMPP client stream in the background (!631)
       - Add option to split XMPP client into read and write half (!631)
       - Remove T: AsXml bound from XmlStream (!675)
-      - Invalid stanzas are now handled dropped (after increasing the SM
-        counters) instead of failing the stream. Previously, that might have
-        caused continuous reconnect loops esp. with stream management (#172,
-        !675).
+      - Invalid stanzas are now dropped (after increasing the SM counters)
+        instead of failing the stream. Previously, that might have caused
+        continuous reconnect loops esp. with stream management (#172, !675).
 
 Version 5.0.0:
 2025-10-28 pep <pep@bouah.net>

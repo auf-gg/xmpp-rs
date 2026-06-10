@@ -1,6 +1,6 @@
 [package]
 name = "xmpp"
-version = "0.6.0"
+version = "0.7.0"
 authors = [
   "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
   "Maxime “pep” Buquet <pep@bouah.net>",
@@ -21,7 +21,7 @@ log = "0.4"
 reqwest = { version = "0.13", features = ["stream"], default-features = false }
 tokio-util = { version = "0.7", features = ["codec"] }
 # same repository dependencies
-tokio-xmpp = { version = "5.0", path = "../tokio-xmpp", default-features = false }
+tokio-xmpp = { version = "6.0", path = "../tokio-xmpp", default-features = false }
 
 [dev-dependencies]
 env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }

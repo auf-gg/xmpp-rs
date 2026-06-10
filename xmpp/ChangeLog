@@ -1,5 +1,8 @@
 Version NEXT
-XXXX-YY-ZZ [ RELEASER <admin@localhost> ]
+XXXX-XX-XX [ RELEASER <releaser@domain.example> ]
+
+Version 0.7.0
+2026-06-10 [ Jonas Schäfer <jonas@zombofant.net> ]
     * Breaking:
       - Agent::wait_for_events now return Vec<Event> and sets inner tokio_xmpp Client
         auto-reconnect to true... It is still aware of Event::Disconnected but should
