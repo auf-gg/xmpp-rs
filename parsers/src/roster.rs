@@ -71,6 +71,10 @@ pub struct Item {
     /// Groups this contact is part of.
     #[xml(child(n = ..))]
     pub groups: Vec<Group>,
+
+    /// Subscription pre-approval
+    #[xml(attribute(default))]
+    pub approved: Option<bool>,
 }
 
 /// The contact list of the user.
@@ -158,6 +162,7 @@ mod tests {
   <item jid='contact@example.org'
         subscription='none'
         ask='subscribe'
+        approved='true'
         name='MyContact'>
       <group>MyBuddies</group>
   </item>
@@ -175,6 +180,7 @@ mod tests {
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
         assert_eq!(roster.items[0].ask, Ask::None);
+        assert_eq!(roster.items[0].approved, None);
         assert_eq!(
             roster.items[0].groups,
             vec!(Group::from_str("Friends").unwrap())
@@ -187,6 +193,7 @@ mod tests {
         assert_eq!(roster.items[3].name, Some(String::from("MyContact")));
         assert_eq!(roster.items[3].subscription, Subscription::None);
         assert_eq!(roster.items[3].ask, Ask::Subscribe);
+        assert_eq!(roster.items[3].approved, Some(true));
         assert_eq!(
             roster.items[3].groups,
             vec!(Group::from_str("MyBuddies").unwrap())
