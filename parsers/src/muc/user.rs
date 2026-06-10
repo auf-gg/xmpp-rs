@@ -284,7 +284,7 @@ pub struct Decline {
 }
 
 /// The main muc#user element.
-#[derive(FromXml, AsXml, Debug, PartialEq, Clone)]
+#[derive(FromXml, AsXml, Debug, Default, PartialEq, Clone)]
 #[xml(namespace = ns::MUC_USER, name = "x")]
 pub struct MucUser {
     /// List of statuses applying to this item.
@@ -304,21 +304,10 @@ pub struct MucUser {
     pub decline: Option<Decline>,
 }
 
-impl Default for MucUser {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl MucUser {
     /// Creates an empty MucUser
     pub fn new() -> MucUser {
-        MucUser {
-            status: vec![],
-            items: vec![],
-            invite: None,
-            decline: None,
-        }
+        MucUser::default()
     }
 
     /// Set statuses for this MucUser
@@ -423,12 +412,7 @@ mod tests {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'/>"
             .parse()
             .unwrap();
-        let muc = MucUser {
-            status: vec![],
-            items: vec![],
-            invite: None,
-            decline: None,
-        };
+        let muc = MucUser::new();
         let elem2 = muc.into();
         assert_eq!(elem, elem2);
     }
