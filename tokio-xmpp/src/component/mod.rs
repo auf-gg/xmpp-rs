@@ -3,7 +3,7 @@
 //! allowed to use any user and resource identifiers in their stanzas.
 use futures::sink::SinkExt;
 use std::str::FromStr;
-use xmpp_parsers::jid::Jid;
+use xmpp_parsers::jid::BareJid;
 
 use crate::{
     component::login::component_login,
@@ -27,7 +27,7 @@ mod stream;
 /// (stanzas). Connection handling however is up to the user.
 pub struct Component<C: ServerConnector> {
     /// The component's Jabber-Id
-    pub jid: Jid,
+    pub jid: BareJid,
     stream: XmppStream<C::Stream>,
 }
 
@@ -87,7 +87,7 @@ impl<C: ServerConnector> Component<C> {
         connector: C,
         timeouts: Timeouts,
     ) -> Result<Self, Error> {
-        let jid = Jid::from_str(jid)?;
+        let jid = BareJid::from_str(jid)?;
         let stream = component_login(connector, jid.clone(), password, timeouts).await?;
         Ok(Component { jid, stream })
     }

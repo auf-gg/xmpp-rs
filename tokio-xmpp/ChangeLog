@@ -5,9 +5,9 @@ Version NEXT:
         new default. The newly-introduced `pedantic` feature can be used to
         opt into the previous default behaviour of rejecting all unknown
         child elements and attributes.
-    * Breaking:
       - Add `xmpp_parsers::stream_features::StreamFeatures` to
       `tokio_xmpp::event::Online` (!631)
+      - `Component.jid` iw now a `BareJid` and not a raw `Jid` (!684)
     * Added:
       - Expose `client_auth` method to allow manual stream setups for advanced
         use cases.
