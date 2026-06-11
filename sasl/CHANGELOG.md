@@ -1,4 +1,6 @@
 Version NEXT, released 20??-??-??:
+
+Version 0.5.3, released 2026-06-11:
 	* Improvements
 		- This crate is now `no_std`, you can use it even on platforms which don’t provide the `std` crate.
 		- Support getrandom 0.3 and 0.4.
