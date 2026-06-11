@@ -6,6 +6,7 @@ Version NEXT:
     * Changes
       - Fix some Clippy warnings
       - Fix build with minidom and without std (!661)
+      - Fix no_std build
     * Added
       - xso::from_bytes_with_options and xso::from_reader_with_options to allow
         passing custom parser configuration.

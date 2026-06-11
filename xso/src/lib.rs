@@ -702,6 +702,7 @@ fn read_start_event_io(
     ))
 }
 
+#[cfg(feature = "std")]
 fn from_reader_inner<T: FromXml, R: io::BufRead>(
     mut reader: rxml::XmlLangTracker<rxml::Reader<R>>,
 ) -> io::Result<T> {
