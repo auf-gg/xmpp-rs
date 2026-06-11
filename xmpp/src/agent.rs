@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 
 use crate::{
     Config, Error, Event, RoomNick, event_loop,
-    jid::{BareJid, Jid},
+    jid::{BareJid, FullJid, Jid},
     message, muc,
     parsers::disco::DiscoInfoResult,
     upload,
@@ -111,7 +111,7 @@ impl Agent {
     /// Get the bound jid of the client.
     ///
     /// If the client is not connected, this will be None.
-    pub fn bound_jid(&self) -> Option<&Jid> {
+    pub fn bound_jid(&self) -> Option<&FullJid> {
         self.client.bound_jid()
     }
 }

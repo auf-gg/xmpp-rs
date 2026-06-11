@@ -28,6 +28,7 @@ XXXX-YY-ZZ [ RELEASER <admin@localhost> ]
         Please refer to the crate docs for details. (!581)
       - Allow joining an already joined room with `Agent::join_room` to enable
         resyncs. Adds a parameter to `muc::room::JoinRoomSettings`.
+      - Make bound_jid a FullJid. (!687)
     * Changed:
       - Replaced unimplemented! with info! calls.
       - Only send `Event::RoomSubject` when there's no body as per 0045.
