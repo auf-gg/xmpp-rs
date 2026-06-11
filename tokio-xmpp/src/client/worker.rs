@@ -81,6 +81,8 @@ impl ClientWorker {
                 bound_jid,
                 features,
             }) => {
+                self.bound_jid = Some(bound_jid.clone());
+                self.features = Some(features.clone());
                 self.iq_response_tracker
                     .set_account_jid(bound_jid.to_bare());
 
