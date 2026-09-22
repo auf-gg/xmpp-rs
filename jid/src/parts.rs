@@ -358,6 +358,10 @@ impl NodeRef {
         let mut buf = String::with_capacity(bytes.len());
         let mut valid_up_to = 0;
         for index in iter {
+            // Catch the case where a '\' is the last or penultimate char.
+            if index >= bytes.len() - 2 {
+                break;
+            }
             buf.push_str(&self.0[valid_up_to..index]);
             match hex_to_char([bytes[index + 1], bytes[index + 2]]) {
                 Ok(char) => {
@@ -561,6 +565,12 @@ mod tests {
     fn unescape() {
         let node = NodePart::new("foo\\40bar").unwrap();
         assert_eq!(node.unescape().unwrap(), "foo@bar");
+
+        let node = NodePart::new("\\22\\26\\27\\2f\\20\\3a\\3c\\3e\\40\\").unwrap();
+        assert_eq!(node.unescape().unwrap(), "\"&'/ :<>@\\");
+
+        let node = NodePart::new("\\22\\26\\27\\2f\\20\\3a\\3c\\3e\\40\\5").unwrap();
+        assert_eq!(node.unescape().unwrap(), "\"&'/ :<>@\\5");
 
         let node = NodePart::new("\\22\\26\\27\\2f\\20\\3a\\3c\\3e\\40\\5c").unwrap();
         assert_eq!(node.unescape().unwrap(), "\"&'/ :<>@\\");
