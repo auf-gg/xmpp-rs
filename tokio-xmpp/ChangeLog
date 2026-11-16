@@ -4,6 +4,10 @@ XXXX-XX-XX RELEASER <releaser@domain.example>
       - Add cloneable ClientHandle and StanzaSender for sends from other tasks
         without blocking the task receiving client events.
     * Fixed:
+      - Verify SCRAM server signatures and XEP-0474 mechanism/channel-binding
+        hashes before accepting authentication or sending a client proof.
+      - Use unbound SCRAM with the appropriate GS2 flag instead of falling back
+        to PLAIN when channel binding is available but SCRAM-PLUS is not.
       - Keep split stream receivers wakeable while a send waits for outgoing
         queue capacity.
 

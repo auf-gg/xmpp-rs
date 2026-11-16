@@ -129,4 +129,10 @@ pub enum AuthError {
     /// Component authentication failure
     #[error("component authentication failure")]
     ComponentFail,
+    /// The server's SCRAM `h=` does not match the offered mechanisms (XEP-0474).
+    #[error("SASL downgrade detected: the offered mechanisms were tampered with")]
+    Downgrade,
+    /// The server could not prove it knows the secret.
+    #[error("the server failed to prove its identity")]
+    ServerProof,
 }
