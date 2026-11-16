@@ -4,12 +4,16 @@ XXXX-XX-XX RELEASER <releaser@domain.example>
       - Add a resumable flag to StanzaStream::new connector callbacks and a
         bound JID to Connection for sessions bound during authentication.
     * Added:
+      - Report failed login attempts through LoginOptions::on_error, except
+        refused FAST tokens that immediately fall back to password login.
       - Support XEP-0388 SASL2, XEP-0386 Bind 2 and XEP-0484 FAST tokens with
         Client::new_with_login, StanzaStream::new_c2s_with, LoginOptions and
         FastToken; retain classic SASL on servers without SASL2.
       - Add cloneable ClientHandle and StanzaSender for sends from other tasks
         without blocking the task receiving client events.
     * Fixed:
+      - Forward suspended streams as Event::Disconnected before the next
+        Event::Online notification instead of hiding connection loss.
       - Verify SCRAM server signatures and XEP-0474 mechanism/channel-binding
         hashes before accepting authentication or sending a client proof.
       - Use unbound SCRAM with the appropriate GS2 flag instead of falling back

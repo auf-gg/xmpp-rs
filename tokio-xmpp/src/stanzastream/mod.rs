@@ -204,6 +204,9 @@ impl StanzaStream {
                                 if had_token && !has_token() {
                                     continue;
                                 }
+                                if let Some(report) = &login.on_error {
+                                    report(&e);
+                                }
                                 // TODO: auth errors should probably be fatal??
                                 log::error!("Failed to connect: {}. Retrying in {:?}.", e, delay);
                                 tokio::time::sleep(delay).await;
