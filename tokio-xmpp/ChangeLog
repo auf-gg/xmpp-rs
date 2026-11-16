@@ -1,5 +1,8 @@
 Version NEXT:
 XXXX-XX-XX RELEASER <releaser@domain.example>
+    * Fixed:
+      - Keep split stream receivers wakeable while a send waits for outgoing
+        queue capacity.
 
 Version 6.0.0:
 2026-06-10 Jonas Schäfer <jonas@zombofant.net>

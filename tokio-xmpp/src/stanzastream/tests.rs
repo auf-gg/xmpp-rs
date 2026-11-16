@@ -296,3 +296,44 @@ async fn drop_stanza_with_unparsable_payload_sm() {
         other => panic!("unexpected recv result on client side: {other:?}"),
     }
 }
+
+/// A receiver polled while a send waits for queue room must still register its waker.
+#[tokio::test]
+async fn split_receiver_wakes_while_a_send_waits() {
+    use core::future::Future;
+    use core::sync::atomic::{AtomicBool, Ordering};
+    use futures::task::{noop_waker_ref, waker, ArcWake};
+    use std::sync::Arc;
+
+    struct Flag(AtomicBool);
+    impl ArcWake for Flag {
+        fn wake_by_ref(this: &Arc<Self>) {
+            this.0.store(true, Ordering::SeqCst);
+        }
+    }
+
+    let (events, rx) = mpsc::channel(1);
+    let (tx, _queue) = mpsc::channel(1);
+    let (sender, mut receiver) = StanzaStream { rx, tx }.split();
+    // The outgoing queue is full, so the next send waits for room.
+    sender.send(Box::new(Presence::available().into())).await;
+    let mut waiting = Box::pin(sender.send(Box::new(Presence::available().into())));
+    assert!(waiting
+        .as_mut()
+        .poll(&mut Context::from_waker(noop_waker_ref()))
+        .is_pending());
+
+    let flag = Arc::new(Flag(AtomicBool::new(false)));
+    let flag_waker = waker(flag.clone());
+    assert!(Pin::new(&mut receiver)
+        .poll_next(&mut Context::from_waker(&flag_waker))
+        .is_pending());
+    events
+        .send(Event::Stream(StreamEvent::Suspended))
+        .await
+        .unwrap();
+    assert!(
+        flag.0.load(Ordering::SeqCst),
+        "the event did not wake the receiver"
+    );
+}
