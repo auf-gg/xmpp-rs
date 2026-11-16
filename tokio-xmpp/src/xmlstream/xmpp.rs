@@ -11,7 +11,9 @@ use rxml::NcNameStr;
 
 use xso::{error::Error, fromxml::FallibleBuilder, AsXml, FromEventsBuilder, FromXml};
 
-use xmpp_parsers::{component, sasl, sm, starttls, stream_error::ReceivedStreamError};
+use xmpp_parsers::{
+    component, sasl, sasl2, sm, starttls, stream_error::ReceivedStreamError, stream_features,
+};
 
 use crate::Stanza;
 
@@ -44,6 +46,39 @@ pub enum XmppStreamElement {
     /// XEP-0198 nonzas
     #[xml(transparent)]
     SM(sm::Nonza),
+
+    /// XEP-0388 nonzas
+    #[xml(transparent)]
+    Sasl2(Sasl2Nonza),
+
+    /// Stream features sent mid-stream: after SASL2 success, which restarts nothing
+    #[xml(transparent)]
+    Features(stream_features::StreamFeatures),
+}
+
+/// Any XEP-0388 (SASL2) element a client sends or receives.
+#[derive(FromXml, AsXml, Debug)]
+#[xml()]
+pub enum Sasl2Nonza {
+    /// Client: start authenticating.
+    #[xml(transparent)]
+    Authenticate(sasl2::Authenticate),
+
+    /// Server: more SASL data needed.
+    #[xml(transparent)]
+    Challenge(sasl2::Challenge),
+
+    /// Client: the answer to a challenge.
+    #[xml(transparent)]
+    Response(sasl2::Response),
+
+    /// Server: authenticated (no stream restart follows).
+    #[xml(transparent)]
+    Success(sasl2::Success),
+
+    /// Server: not authenticated.
+    #[xml(transparent)]
+    Failure(sasl2::Failure),
 }
 
 #[derive(Debug)]

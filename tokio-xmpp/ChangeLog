@@ -1,6 +1,12 @@
 Version NEXT:
 XXXX-XX-XX RELEASER <releaser@domain.example>
+    * Breaking:
+      - Add a resumable flag to StanzaStream::new connector callbacks and a
+        bound JID to Connection for sessions bound during authentication.
     * Added:
+      - Support XEP-0388 SASL2, XEP-0386 Bind 2 and XEP-0484 FAST tokens with
+        Client::new_with_login, StanzaStream::new_c2s_with, LoginOptions and
+        FastToken; retain classic SASL on servers without SASL2.
       - Add cloneable ClientHandle and StanzaSender for sends from other tasks
         without blocking the task receiving client events.
     * Fixed:

@@ -107,11 +107,12 @@ async fn custom_stream_pair(
 
     let mut lhs = Some((lhs, identity.clone()));
     let client = StanzaStream::new(
-        Box::new(move |_, sink| match lhs.take() {
+        Box::new(move |_, _, sink| match lhs.take() {
             Some(((features, stream), identity)) => match sink.send(Connection {
                 features,
                 stream: stream.box_stream(),
                 identity: identity.into(),
+                bound: None,
             }) {
                 Ok(()) => (),
                 Err(_) => {

@@ -32,12 +32,13 @@ use crate::connect::TcpServerConnector;
 mod iq;
 pub(crate) mod login;
 pub(crate) mod receiver;
+pub(crate) mod sasl2;
 pub(crate) mod sender;
 mod stream;
 mod worker;
 
 pub use iq::{IqFailure, IqRequest, IqResponse, IqResponseToken};
-pub use login::auth;
+pub use login::{auth, FastToken, LoginOptions};
 
 /// XMPP client connection and state
 ///
@@ -301,7 +302,20 @@ impl Client {
         connector: C,
         timeouts: Timeouts,
     ) -> Self {
-        let stream = StanzaStream::new_c2s(connector, jid.into(), password.into(), timeouts, 16);
+        Self::new_with_login(jid, password, connector, timeouts, LoginOptions::default())
+    }
+
+    /// Like [`Self::new_with_connector`], logging in with SASL2, Bind 2 and FAST where the
+    /// server offers them.
+    pub fn new_with_login<J: Into<Jid>, P: Into<String>, C: ServerConnector>(
+        jid: J,
+        password: P,
+        connector: C,
+        timeouts: Timeouts,
+        login: LoginOptions,
+    ) -> Self {
+        let stream =
+            StanzaStream::new_c2s_with(connector, jid.into(), password.into(), timeouts, 16, login);
         let (stream_tx, stream_rx) = stream.split();
 
         let iq_response_tracker = iq::IqResponseTracker::new();

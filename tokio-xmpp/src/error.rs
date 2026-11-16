@@ -135,4 +135,7 @@ pub enum AuthError {
     /// The server could not prove it knows the secret.
     #[error("the server failed to prove its identity")]
     ServerProof,
+    /// SASL2 failure from the server, with its text.
+    #[error("failure from the server: {0}")]
+    Sasl2(String),
 }

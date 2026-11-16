@@ -86,7 +86,7 @@ pub use self::common::{StreamHeader, Timeouts};
 pub use self::initiator::{InitiatingStream, PendingFeaturesRecv, RecvFeaturesError};
 pub use self::responder::{AcceptedStream, PendingFeaturesSend};
 pub use self::xmpp::{
-    FallibleStreamElement, RawStanzaHeader, StreamElementError, XmppStreamElement,
+    FallibleStreamElement, RawStanzaHeader, Sasl2Nonza, StreamElementError, XmppStreamElement,
 };
 
 #[cfg(feature = "syntax-highlighting")]

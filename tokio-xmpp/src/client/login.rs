@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::io;
 use tokio::io::{AsyncBufRead, AsyncWrite};
 use xmpp_parsers::{
-    jid::Jid,
+    jid::{FullJid, Jid},
     ns,
     sasl::{Auth, Mechanism as XMPPMechanism, Nonza, Response},
     stream_features::StreamFeatures,
@@ -22,6 +22,8 @@ use crate::{
         xmpp::XmppStreamElement, InitiatingStream, ReadError, StreamHeader, Timeouts, XmppStream,
     },
 };
+
+pub use super::sasl2::{FastToken, LoginOptions};
 
 /// Run the authentication handshake on a given stream.
 ///
@@ -212,13 +214,17 @@ pub(crate) fn cb_types(features: &StreamFeatures) -> Option<Vec<String>> {
     )
 }
 
-/// Authenticate to an XMPP server, but do not bind a resource.
-pub async fn client_auth<C: ServerConnector>(
+/// Authenticate: SASL2 (XEP-0388) where the server has it, with a FAST token
+/// (XEP-0484) when there is one and, with `bind`, the resource bound right away (XEP-0386,
+/// the bound JID comes back). Classic SASL otherwise.
+pub async fn client_login<C: ServerConnector>(
     server: C,
     jid: Jid,
     password: String,
     timeouts: Timeouts,
-) -> Result<(StreamFeatures, XmppStream<C::Stream>), Error> {
+    opts: &LoginOptions,
+    bind: bool,
+) -> Result<(StreamFeatures, XmppStream<C::Stream>, Option<FullJid>), Error> {
     let username = jid.node().unwrap().as_str();
 
     let (xmpp_stream, channel_binding) = server.connect(&jid, ns::JABBER_CLIENT, timeouts).await?;
@@ -228,6 +234,9 @@ pub async fn client_auth<C: ServerConnector>(
         .with_username(username)
         .with_password(password)
         .with_channel_binding(channel_binding);
+    if features.sasl2.is_some() {
+        return super::sasl2::auth(xmpp_stream, &features, creds, opts, bind).await;
+    }
     // Authenticated (unspecified) stream
     let cb_types = cb_types(&features);
     let stream = auth_with(
@@ -244,7 +253,8 @@ pub async fn client_auth<C: ServerConnector>(
             id: None,
         })
         .await?;
-    Ok(stream.recv_features().await?)
+    let (features, stream) = stream.recv_features().await?;
+    Ok((features, stream, None))
 }
 
 #[cfg(test)]

@@ -56,6 +56,9 @@ pub(super) enum NegotiationState {
 
     /// Receive the bind response.
     ReceiveBindResponse { sm_supported: bool },
+
+    /// Bound at login (XEP-0386 Bind 2) and no stream management on offer: done.
+    Bound { bound_jid: FullJid },
 }
 
 /// The ultimate result of a stream negotiation.
@@ -100,7 +103,21 @@ pub(super) enum NegotiationResult {
 }
 
 impl NegotiationState {
-    pub fn new(features: &StreamFeatures, sm_state: Option<SmState>) -> io::Result<Self> {
+    pub fn new(
+        features: &StreamFeatures,
+        sm_state: Option<SmState>,
+        bound: Option<FullJid>,
+    ) -> io::Result<Self> {
+        // Bind 2 bound the stream at login; what remains is enabling SM.
+        if let Some(bound_jid) = bound {
+            return Ok(match features.stream_management.is_some() {
+                true => Self::SendSmRequest {
+                    sm_state: None,
+                    bound_jid: Some(bound_jid),
+                },
+                false => Self::Bound { bound_jid },
+            });
+        }
         if let Some(sm_state) = sm_state {
             if features.stream_management.is_some() {
                 return Ok(Self::SendSmRequest {
@@ -149,6 +166,11 @@ impl NegotiationState {
         // that we can proceed.
         // TODO: define a deadline for negotiation.
         match self {
+            Self::Bound { bound_jid } => Poll::Ready(Break(NegotiationResult::StreamReset {
+                sm_state: None,
+                bound_jid: Jid::from(bound_jid.clone()),
+            })),
+
             Self::SendBindRequest { sm_supported } => {
                 match ready!(<XmppStream as Sink<&Stanza>>::poll_ready(
                     stream.as_mut(),

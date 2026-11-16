@@ -33,6 +33,7 @@ use futures::{SinkExt, Stream};
 use tokio::sync::{mpsc, oneshot};
 use xmpp_parsers::{jid::Jid, stream_features::StreamFeatures};
 
+use crate::client::login::LoginOptions;
 use crate::connect::ServerConnector;
 use crate::xmlstream::Timeouts;
 use crate::Stanza;
@@ -122,31 +123,64 @@ impl StanzaStream {
         timeouts: Timeouts,
         queue_depth: usize,
     ) -> Self {
+        Self::new_c2s_with(
+            server,
+            jid,
+            password,
+            timeouts,
+            queue_depth,
+            LoginOptions::default(),
+        )
+    }
+
+    /// [`Self::new_c2s`] with SASL2, Bind 2 and FAST where the server has them.
+    /// A stream that has a session to resume is not bound at login, so the resumption can happen.
+    pub fn new_c2s_with<C: ServerConnector>(
+        server: C,
+        jid: Jid,
+        password: String,
+        timeouts: Timeouts,
+        queue_depth: usize,
+        login: LoginOptions,
+    ) -> Self {
         let reconnector = Box::new(
-            move |_preferred_location: Option<String>, slot: oneshot::Sender<Connection>| {
+            move |_preferred_location: Option<String>,
+                  resumable: bool,
+                  slot: oneshot::Sender<Connection>| {
                 let jid = jid.clone();
                 let server = server.clone();
                 let password = password.clone();
+                let login = login.clone();
                 tokio::spawn(async move {
                     const MAX_DELAY: Duration = Duration::new(30, 0);
                     let mut delay = Duration::new(1, 0);
+                    let has_token = || {
+                        login
+                            .fast
+                            .as_ref()
+                            .is_some_and(|f| f.lock().unwrap().is_some())
+                    };
                     loop {
                         log::debug!("Starting new connection as {}", jid);
-                        match crate::client::login::client_auth(
+                        let had_token = has_token();
+                        match crate::client::login::client_login(
                             server.clone(),
                             jid.clone(),
                             password.clone(),
                             timeouts,
+                            &login,
+                            !resumable,
                         )
                         .await
                         {
-                            Ok((features, stream)) => {
+                            Ok((features, stream, bound)) => {
                                 log::debug!("Connection as {} established", jid);
                                 let stream = stream.box_stream();
                                 let Err(mut conn) = slot.send(Connection {
                                     stream,
                                     features,
-                                    identity: jid,
+                                    identity: bound.clone().map(Jid::from).unwrap_or(jid),
+                                    bound,
                                 }) else {
                                     // Send succeeded, we're done here.
                                     return;
@@ -166,6 +200,10 @@ impl StanzaStream {
                                 return;
                             }
                             Err(e) => {
+                                // A refused FAST token is cleared; retry with the password immediately.
+                                if had_token && !has_token() {
+                                    continue;
+                                }
                                 // TODO: auth errors should probably be fatal??
                                 log::error!("Failed to connect: {}. Retrying in {:?}.", e, delay);
                                 tokio::time::sleep(delay).await;
@@ -212,7 +250,9 @@ impl StanzaStream {
     /// full for example because of a slow server, you can still receive
     /// data).
     pub fn new(
-        connector: Box<dyn FnMut(Option<String>, oneshot::Sender<Connection>) + Send + 'static>,
+        connector: Box<
+            dyn FnMut(Option<String>, bool, oneshot::Sender<Connection>) + Send + 'static,
+        >,
         queue_depth: usize,
     ) -> Self {
         // c2f = core to frontend, f2c = frontend to core

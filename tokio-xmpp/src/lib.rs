@@ -130,7 +130,7 @@ pub use xso::{asxml::PrintRawXml, error::FromElementError};
 pub use crate::error::Error;
 pub use client::{
     auth as client_login, receiver::ClientReceiver, sender::ClientSender, Client, ClientHandle,
-    IqFailure, IqRequest, IqResponse, IqResponseToken,
+    FastToken, IqFailure, IqRequest, IqResponse, IqResponseToken, LoginOptions,
 };
 
 #[cfg(feature = "insecure-tcp")]

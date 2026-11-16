@@ -19,7 +19,7 @@ use tokio::{
 
 use xmpp_parsers::{
     iq,
-    jid::Jid,
+    jid::{FullJid, Jid},
     ping,
     stream_error::{DefinedCondition, StreamError},
     stream_features::StreamFeatures,
@@ -55,6 +55,10 @@ pub struct Connection {
     /// bind time. If `identity` is a bare JID, the peer will assign the
     /// resource.
     pub identity: Jid,
+
+    /// Set when the login bound the stream already (XEP-0386 Bind 2): resource binding is
+    /// skipped then.
+    pub bound: Option<FullJid>,
 }
 
 // Allow for up to 10s for local shutdown.
@@ -161,13 +165,14 @@ impl WorkerStream {
                             stream,
                             features,
                             identity,
+                            bound,
                         }) => {
                             let substate = ConnectedState::Negotiating {
                                 // We panic here, but that is ok-ish, because
                                 // that will "only" crash the worker and thus
                                 // the stream, and that is kind of exactly
                                 // what we want.
-                                substate: NegotiationState::new(&features, sm_state.take())
+                                substate: NegotiationState::new(&features, sm_state.take(), bound)
                                     .expect("Non-negotiable stream"),
                             };
                             *this = Self::Connected {
@@ -406,7 +411,7 @@ pub(super) fn parse_error_to_stream_error(e: xso::error::Error) -> StreamError {
 
 /// Worker system for a [`StanzaStream`].
 pub(super) struct StanzaStreamWorker {
-    reconnector: Box<dyn FnMut(Option<String>, oneshot::Sender<Connection>) + Send + 'static>,
+    reconnector: Box<dyn FnMut(Option<String>, bool, oneshot::Sender<Connection>) + Send + 'static>,
     frontend_tx: mpsc::Sender<Event>,
     stream: WorkerStream,
     transmit_queue: TransmitQueue<QueueEntry>,
@@ -436,12 +441,12 @@ macro_rules! send_or_break {
 impl StanzaStreamWorker {
     pub fn spawn(
         mut reconnector: Box<
-            dyn FnMut(Option<String>, oneshot::Sender<Connection>) + Send + 'static,
+            dyn FnMut(Option<String>, bool, oneshot::Sender<Connection>) + Send + 'static,
         >,
         queue_depth: usize,
     ) -> (mpsc::Sender<QueueEntry>, mpsc::Receiver<Event>) {
         let (conn_tx, conn_rx) = oneshot::channel();
-        reconnector(None, conn_tx);
+        reconnector(None, false, conn_tx);
         // c2f = core to frontend
         let (c2f_tx, c2f_rx) = mpsc::channel(queue_depth);
         // f2c = frontend to core
@@ -512,7 +517,9 @@ impl StanzaStreamWorker {
                                 log::debug!("Immediately aborting reconnect because the frontend is gone.");
                                 break;
                             }
-                            (self.reconnector)(None, slot);
+                            // A session that can be resumed is not bound at login.
+                            let resumable = matches!(&self.stream, WorkerStream::Connecting { sm_state: Some(sm), .. } if sm.resume_info().is_some());
+                            (self.reconnector)(None, resumable, slot);
                         }
                         WorkerEvent::Resumed => send_or_break!(
                             Event::Stream(StreamEvent::Resumed) => permit in self.frontend_tx,
