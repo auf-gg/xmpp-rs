@@ -1,5 +1,8 @@
 Version NEXT:
 XXXX-XX-XX RELEASER <releaser@domain.example>
+    * Added:
+      - Add cloneable ClientHandle and StanzaSender for sends from other tasks
+        without blocking the task receiving client events.
     * Fixed:
       - Keep split stream receivers wakeable while a send waits for outgoing
         queue capacity.

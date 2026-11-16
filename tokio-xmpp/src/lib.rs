@@ -129,8 +129,8 @@ pub use xso::{asxml::PrintRawXml, error::FromElementError};
 /// Generic tokio_xmpp Error
 pub use crate::error::Error;
 pub use client::{
-    auth as client_login, receiver::ClientReceiver, sender::ClientSender, Client, IqFailure,
-    IqRequest, IqResponse, IqResponseToken,
+    auth as client_login, receiver::ClientReceiver, sender::ClientSender, Client, ClientHandle,
+    IqFailure, IqRequest, IqResponse, IqResponseToken,
 };
 
 #[cfg(feature = "insecure-tcp")]

@@ -300,7 +300,7 @@ impl Stream for StanzaStream {
 }
 
 /// Send half of the [`StanzaStream`]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StanzaSender(mpsc::Sender<QueueEntry>);
 
 impl StanzaSender {
